@@ -9,15 +9,23 @@ import { FamilyMembers } from './components/FamilyMembers'
 import { MonthSummary } from './components/MonthSummary'
 import { RenameMemberDialog } from './components/RenameMemberDialog'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
+import { useToday } from './hooks/useToday'
 import type { Bill, Member } from './types'
-import { addMonths, formatMonthName, getToday } from './utils/dates'
+import { addMonths, formatMonthName } from './utils/dates'
 
 type BillFormState = { mode: 'new' } | { mode: 'edit'; bill: Bill } | null
 
 function App() {
   const store = useFinanceStore()
-  const [today] = useState(getToday)
+  const today = useToday()
   const [month, setMonth] = useState(today.month)
+  const [lastTodayMonth, setLastTodayMonth] = useState(today.month)
+
+  // Na virada do mês, quem estava vendo o mês atual passa para o novo mês atual.
+  if (today.month !== lastTodayMonth) {
+    setLastTodayMonth(today.month)
+    if (month === lastTodayMonth) setMonth(today.month)
+  }
   const [billForm, setBillForm] = useState<BillFormState>(null)
   const [billToDelete, setBillToDelete] = useState<Bill | null>(null)
   const [memberToRename, setMemberToRename] = useState<Member | null>(null)
