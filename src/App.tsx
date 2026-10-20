@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import { AccountGroup } from './components/AccountGroup'
 import { AppHeader } from './components/AppHeader'
 import { BackupDialog } from './components/BackupDialog'
 import { BillFormDialog } from './components/BillFormDialog'
@@ -117,41 +118,51 @@ function App() {
           </div>
         )}
 
-        <FamilyArea
-          memberCount={store.members.length}
-          bills={monthBills}
-          overdueCount={overdueBills.length}
+        <AccountGroup icon="person" title="Contas individuais" description="Despesas pessoais">
+          <p className="account-group__empty">Nenhuma área individual foi criada ainda.</p>
+        </AccountGroup>
+
+        <AccountGroup
+          icon="people"
+          title="Contas compartilhadas"
+          description="Despesas divididas entre pessoas"
         >
-          <MonthSummary
+          <FamilyArea
+            memberCount={store.members.length}
             bills={monthBills}
-            overdueBills={overdueBills}
-            onMarkPaid={(bill) => store.togglePaid(bill.id)}
-          />
+            overdueCount={overdueBills.length}
+          >
+            <MonthSummary
+              bills={monthBills}
+              overdueBills={overdueBills}
+              onMarkPaid={(bill) => store.togglePaid(bill.id)}
+            />
 
-          <FamilyMembers
-            members={store.members}
-            bills={monthBills}
-            feedback={memberFeedback}
-            canAdd={store.members.length < MAX_MEMBERS}
-            onAdd={() => setMemberForm({ mode: 'new' })}
-            onEdit={(member) => setMemberForm({ mode: 'edit', member })}
-            onDelete={setMemberToDelete}
-          />
+            <FamilyMembers
+              members={store.members}
+              bills={monthBills}
+              feedback={memberFeedback}
+              canAdd={store.members.length < MAX_MEMBERS}
+              onAdd={() => setMemberForm({ mode: 'new' })}
+              onEdit={(member) => setMemberForm({ mode: 'edit', member })}
+              onDelete={setMemberToDelete}
+            />
 
-          <BillList
-            bills={monthBills}
-            members={store.members}
-            today={today}
-            monthName={formatMonthName(month)}
-            previousMonthName={formatMonthName(previousMonth)}
-            canCopyPreviousMonth={previousMonthHasBills}
-            onAdd={() => setBillForm({ mode: 'new' })}
-            onCopyPreviousMonth={() => store.copyBills(previousMonth, month)}
-            onTogglePaid={(bill) => store.togglePaid(bill.id)}
-            onEdit={(bill) => setBillForm({ mode: 'edit', bill })}
-            onDelete={setBillToDelete}
-          />
-        </FamilyArea>
+            <BillList
+              bills={monthBills}
+              members={store.members}
+              today={today}
+              monthName={formatMonthName(month)}
+              previousMonthName={formatMonthName(previousMonth)}
+              canCopyPreviousMonth={previousMonthHasBills}
+              onAdd={() => setBillForm({ mode: 'new' })}
+              onCopyPreviousMonth={() => store.copyBills(previousMonth, month)}
+              onTogglePaid={(bill) => store.togglePaid(bill.id)}
+              onEdit={(bill) => setBillForm({ mode: 'edit', bill })}
+              onDelete={setBillToDelete}
+            />
+          </FamilyArea>
+        </AccountGroup>
       </main>
 
       <footer className="app__footer">

@@ -108,7 +108,7 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
             Salvar uma cópia
           </h3>
           <p className="backup-section__text">
-            Baixa um arquivo com a família e todas as contas (
+            Baixa um arquivo com os membros e todas as contas (
             {plural(data.members.length, 'integrante', 'integrantes')} e{' '}
             {plural(data.bills.length, 'conta', 'contas')}). Guarde-o em um lugar seguro.
           </p>

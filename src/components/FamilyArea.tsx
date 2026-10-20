@@ -31,7 +31,7 @@ export function FamilyArea({ memberCount, bills, overdueCount, children }: Famil
           onClick={() => setExpanded((current) => !current)}
         >
           <span className="area__identity">
-            <span className="area__name">Família</span>
+            <span className="area__name">Gastos da casa</span>
             <span className="area__meta">
               {memberCount === 1 ? '1 membro' : `${memberCount} membros`}
             </span>

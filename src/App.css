@@ -317,6 +317,8 @@
 .personal-area__name {
   flex: 1;
   font-weight: 600;
+  /* O nome da área fica em uma linha; se faltar espaço, valor e etiqueta descem. */
+  white-space: nowrap;
 }
 
 .personal-area__total {
@@ -399,6 +401,62 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
+}
+
+/* ---------- Boxes de contas (individuais / compartilhadas) ---------- */
+
+.account-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+}
+
+.account-group__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-group__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+}
+
+.account-group__title {
+  font-size: 1.2rem;
+  font-weight: 650;
+}
+
+.account-group__description {
+  color: var(--text-soft);
+  font-size: 0.92rem;
+}
+
+.account-group__content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.account-group__empty {
+  padding: 14px 16px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text-soft);
+  font-size: 0.92rem;
+  text-align: center;
 }
 
 /* ---------- Área recolhível (Família) ---------- */
@@ -1529,6 +1587,10 @@ select.input option {
     padding: 16px;
   }
 
+  .account-group {
+    padding: 14px 12px;
+  }
+
   .area__toggle {
     padding: 14px 16px;
   }
@@ -1580,8 +1642,18 @@ select.input option {
     font-size: 1.2rem;
   }
 
+  /* minmax(0, 1fr): as colunas encolhem com a tela em vez de cortar os cartões. */
   .members {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .member-card {
+    min-width: 0;
+    padding-inline: 8px;
+  }
+
+  .member-card .tag {
+    white-space: normal;
   }
 
   .add-button {

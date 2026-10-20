@@ -70,7 +70,7 @@ export function PersonalPanel({
 
   const family = getMemberShareTotals(member.id, bills)
   // Por enquanto só existe a Área Família; novas áreas entrarão nesta lista.
-  const areas: PersonalArea[] = [{ id: 'familia', label: 'Família', ...family }]
+  const areas: PersonalArea[] = [{ id: 'familia', label: 'Gastos da casa', ...family }]
   const totalCents = areas.reduce((sum, area) => sum + area.totalCents, 0)
   const pendingCents = areas.reduce((sum, area) => sum + area.pendingCents, 0)
   const barLabel =

@@ -107,7 +107,7 @@ export function getMemberDeletionBlockers(
     blockers.push('Não é possível excluir o membro que está selecionado no painel pessoal.')
   }
   if (members.length <= 1) {
-    blockers.push('A família precisa ter pelo menos um membro.')
+    blockers.push('É preciso ter pelo menos um membro.')
   }
   return blockers
 }
