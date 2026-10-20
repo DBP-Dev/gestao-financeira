@@ -2,6 +2,8 @@ import { useState } from 'react'
 import './App.css'
 import { AccountGroup } from './components/AccountGroup'
 import { AppHeader } from './components/AppHeader'
+import { AreaCard } from './components/AreaCard'
+import { AreaFormDialog, type AreaFormValues } from './components/AreaFormDialog'
 import { BackupDialog } from './components/BackupDialog'
 import { BillFormDialog } from './components/BillFormDialog'
 import { BillList } from './components/BillList'
@@ -16,7 +18,8 @@ import { StorageWarning } from './components/StorageWarning'
 import { useCurrentMember } from './hooks/useCurrentMember'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
 import { useToday } from './hooks/useToday'
-import type { Bill, Member } from './types'
+import type { AreaType, Bill, Member } from './types'
+import { HOME_AREA_ID, MAX_AREAS } from './utils/areas'
 import { addMonths, effectiveDueDay, formatMonthName, getBillStatus } from './utils/dates'
 import { MAX_MEMBERS, createMember, getMemberDeletionBlockers } from './utils/members'
 
@@ -42,6 +45,46 @@ function App() {
   const currentMember = useCurrentMember(store.members)
   const [confirmClearExamples, setConfirmClearExamples] = useState(false)
   const [showBackup, setShowBackup] = useState(false)
+  const [areaFormType, setAreaFormType] = useState<AreaType | null>(null)
+  const [areaFeedback, setAreaFeedback] = useState<{ type: AreaType; text: string } | null>(
+    null,
+  )
+
+  // Cada box mostra só as áreas do seu tipo; "Gastos da casa" é exibida pelo FamilyArea.
+  const individualAreas = store.areas.filter((area) => area.type === 'individual')
+  const otherSharedAreas = store.areas.filter(
+    (area) => area.type === 'shared' && area.id !== HOME_AREA_ID,
+  )
+  const canAddArea = store.areas.length < MAX_AREAS
+
+  function handleCreateArea({ name, type }: AreaFormValues) {
+    store.addArea(name, type)
+    setAreaFeedback({ type, text: `✓ Área “${name}” criada com sucesso.` })
+    setAreaFormType(null)
+  }
+
+  function newAreaButton(type: AreaType) {
+    return (
+      <button
+        type="button"
+        className="button button--small button--ghost"
+        onClick={() => setAreaFormType(type)}
+        disabled={!canAddArea}
+      >
+        ＋ Nova área
+      </button>
+    )
+  }
+
+  function areaFeedbackFor(type: AreaType) {
+    return (
+      <p className="members__feedback" role="status">
+        {areaFeedback?.type === type && (
+          <span className="backup-message backup-message--ok">{areaFeedback.text}</span>
+        )}
+      </p>
+    )
+  }
 
   const monthBills = store.bills.filter((bill) => bill.month === month)
   // Meses anteriores ao selecionado: nunca se misturam com os totais do mês.
@@ -118,15 +161,27 @@ function App() {
           </div>
         )}
 
-        <AccountGroup icon="person" title="Contas individuais" description="Despesas pessoais">
-          <p className="account-group__empty">Nenhuma área individual foi criada ainda.</p>
+        <AccountGroup
+          icon="person"
+          title="Contas individuais"
+          description="Despesas pessoais"
+          action={newAreaButton('individual')}
+        >
+          {areaFeedbackFor('individual')}
+          {individualAreas.length === 0 ? (
+            <p className="account-group__empty">Nenhuma área individual foi criada ainda.</p>
+          ) : (
+            individualAreas.map((area) => <AreaCard key={area.id} area={area} />)
+          )}
         </AccountGroup>
 
         <AccountGroup
           icon="people"
           title="Contas compartilhadas"
           description="Despesas divididas entre pessoas"
+          action={newAreaButton('shared')}
         >
+          {areaFeedbackFor('shared')}
           <FamilyArea
             memberCount={store.members.length}
             bills={monthBills}
@@ -162,6 +217,9 @@ function App() {
               onDelete={setBillToDelete}
             />
           </FamilyArea>
+          {otherSharedAreas.map((area) => (
+            <AreaCard key={area.id} area={area} />
+          ))}
         </AccountGroup>
       </main>
 
@@ -176,12 +234,22 @@ function App() {
         </button>
       </footer>
 
+      {areaFormType && (
+        <AreaFormDialog
+          initialType={areaFormType}
+          areas={store.areas}
+          onSave={handleCreateArea}
+          onCancel={() => setAreaFormType(null)}
+        />
+      )}
+
       {showBackup && (
         <BackupDialog
           data={store.data}
           onRestore={(restored) => {
             store.replaceAllData(restored)
             setMemberFeedback(null)
+            setAreaFeedback(null)
           }}
           onClose={() => setShowBackup(false)}
         />

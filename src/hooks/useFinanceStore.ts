@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_MEMBERS, createInitialData } from '../data/sampleData'
-import type { Bill, FinanceData, Member, MonthKey } from '../types'
+import type { Area, AreaType, Bill, FinanceData, Member, MonthKey } from '../types'
+import { HOME_AREA_ID, createArea, getHomeArea, migrateV1ToV2 } from '../utils/areas'
 import { parseStoredData } from '../utils/backup'
 import { getToday } from '../utils/dates'
 import { createId } from '../utils/ids'
 
+/**
+ * Chave mantida desde a primeira versão para não mover dados existentes.
+ * O "v1" do nome é histórico: o formato real é indicado pelo campo `version`
+ * do conteúdo (1 = antes das áreas, 2 = com áreas) e lido por parseStoredData.
+ */
 const STORAGE_KEY = 'gestao-financeira:dados:v1'
 /** Cópias exatas de dados que não puderam ser lidos. Nunca são sobrescritas. */
 const RECOVERY_KEY_PREFIX = `${STORAGE_KEY}:recuperacao:`
@@ -28,7 +34,7 @@ interface InitialLoad {
 }
 
 function createEmptyData(): FinanceData {
-  return { version: 1, members: DEFAULT_MEMBERS, bills: [] }
+  return migrateV1ToV2({ version: 1, members: DEFAULT_MEMBERS, bills: [] })
 }
 
 /**
@@ -126,17 +132,22 @@ export function useFinanceStore() {
     saveData(data)
   }, [data, initial])
 
-  function addBill(input: BillInput) {
+  /** Aplica uma alteração somente na área "Gastos da casa"; as outras áreas não mudam. */
+  function updateHome(change: (home: Area) => Area) {
     setData((current) => ({
       ...current,
-      bills: [...current.bills, { ...input, id: createId() }],
+      areas: current.areas.map((area) => (area.id === HOME_AREA_ID ? change(area) : area)),
     }))
   }
 
+  function addBill(input: BillInput) {
+    updateHome((home) => ({ ...home, bills: [...home.bills, { ...input, id: createId() }] }))
+  }
+
   function updateBill(id: string, input: BillInput) {
-    setData((current) => ({
-      ...current,
-      bills: current.bills.map((bill) =>
+    updateHome((home) => ({
+      ...home,
+      bills: home.bills.map((bill) =>
         // Depois de editada, a conta deixa de ser considerada exemplo.
         bill.id === id ? { ...input, id, isExample: false } : bill,
       ),
@@ -144,24 +155,19 @@ export function useFinanceStore() {
   }
 
   function deleteBill(id: string) {
-    setData((current) => ({
-      ...current,
-      bills: current.bills.filter((bill) => bill.id !== id),
-    }))
+    updateHome((home) => ({ ...home, bills: home.bills.filter((bill) => bill.id !== id) }))
   }
 
   function togglePaid(id: string) {
-    setData((current) => ({
-      ...current,
-      bills: current.bills.map((bill) =>
-        bill.id === id ? { ...bill, paid: !bill.paid } : bill,
-      ),
+    updateHome((home) => ({
+      ...home,
+      bills: home.bills.map((bill) => (bill.id === id ? { ...bill, paid: !bill.paid } : bill)),
     }))
   }
 
   function copyBills(fromMonth: MonthKey, toMonth: MonthKey) {
-    setData((current) => {
-      const copies = current.bills
+    updateHome((home) => {
+      const copies = home.bills
         .filter((bill) => bill.month === fromMonth)
         .map((bill) => ({
           ...bill,
@@ -169,40 +175,45 @@ export function useFinanceStore() {
           month: toMonth,
           paid: false,
         }))
-      return { ...current, bills: [...current.bills, ...copies] }
+      return { ...home, bills: [...home.bills, ...copies] }
     })
   }
 
   function deleteExamples() {
-    setData((current) => ({
-      ...current,
-      bills: current.bills.filter((bill) => !bill.isExample),
-    }))
+    updateHome((home) => ({ ...home, bills: home.bills.filter((bill) => !bill.isExample) }))
   }
 
   /** Atualiza o perfil exibido (nome e cor). O id e as contas não mudam. */
   function updateMember(id: string, changes: Pick<Member, 'name' | 'color'>) {
-    setData((current) => ({
-      ...current,
-      members: current.members.map((member) =>
+    updateHome((home) => ({
+      ...home,
+      members: home.members.map((member) =>
         member.id === id ? { ...member, name: changes.name, color: changes.color } : member,
       ),
     }))
   }
 
   function addMember(member: Member) {
-    setData((current) => ({ ...current, members: [...current.members, member] }))
+    updateHome((home) => ({ ...home, members: [...home.members, member] }))
   }
 
   /** Exclui um membro somente se ele não participa de nenhuma conta e não é o último. */
   function deleteMember(id: string) {
-    setData((current) => {
-      const hasShares = current.bills.some((bill) =>
+    updateHome((home) => {
+      const hasShares = home.bills.some((bill) =>
         bill.shares.some((share) => share.memberId === id),
       )
-      if (hasShares || current.members.length <= 1) return current
-      return { ...current, members: current.members.filter((member) => member.id !== id) }
+      if (hasShares || home.members.length <= 1) return home
+      return { ...home, members: home.members.filter((member) => member.id !== id) }
     })
+  }
+
+  /** Cria uma área vazia. O nome já deve ter sido validado (validateAreaName). */
+  function addArea(name: string, type: AreaType) {
+    setData((current) => ({
+      ...current,
+      areas: [...current.areas, createArea(name, type, current.areas)],
+    }))
   }
 
   /** Substitui todos os dados de uma vez (usado ao restaurar um backup já validado). */
@@ -210,11 +221,15 @@ export function useFinanceStore() {
     setData(next)
   }
 
+  const home = getHomeArea(data)
+
   return {
     data,
     storageIssue: initial.issue,
-    members: data.members,
-    bills: data.bills,
+    areas: data.areas,
+    /** Membros e contas da área "Gastos da casa", usados pela interface atual. */
+    members: home.members,
+    bills: home.bills,
     addBill,
     updateBill,
     deleteBill,
@@ -224,6 +239,7 @@ export function useFinanceStore() {
     updateMember,
     addMember,
     deleteMember,
+    addArea,
     replaceAllData,
   }
 }

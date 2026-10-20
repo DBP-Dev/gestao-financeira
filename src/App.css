@@ -417,8 +417,9 @@
 
 .account-group__header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 10px 12px;
 }
 
 .account-group__icon {
@@ -448,6 +449,50 @@
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+}
+
+.account-group__heading {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.account-group__action {
+  flex-shrink: 0;
+}
+
+.area-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.area-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.area-card__name {
+  font-size: 1.1rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.area-card__meta {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.area-card__empty {
+  color: var(--text-soft);
+  font-size: 0.88rem;
 }
 
 .account-group__empty {

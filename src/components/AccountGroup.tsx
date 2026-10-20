@@ -4,6 +4,8 @@ interface AccountGroupProps {
   icon: 'person' | 'people'
   title: string
   description: string
+  /** Ação opcional no cabeçalho (ex.: botão "Nova área"). */
+  action?: ReactNode
   children: ReactNode
 }
 
@@ -38,7 +40,7 @@ function GroupIcon({ icon }: { icon: AccountGroupProps['icon'] }) {
 }
 
 /** Box que agrupa áreas de contas (individuais ou compartilhadas). */
-export function AccountGroup({ icon, title, description, children }: AccountGroupProps) {
+export function AccountGroup({ icon, title, description, action, children }: AccountGroupProps) {
   const titleId = useId()
   return (
     <section className="account-group" aria-labelledby={titleId}>
@@ -46,12 +48,13 @@ export function AccountGroup({ icon, title, description, children }: AccountGrou
         <span className="account-group__icon">
           <GroupIcon icon={icon} />
         </span>
-        <div>
+        <div className="account-group__heading">
           <h2 id={titleId} className="account-group__title">
             {title}
           </h2>
           <p className="account-group__description">{description}</p>
         </div>
+        {action && <div className="account-group__action">{action}</div>}
       </header>
       <div className="account-group__content">{children}</div>
     </section>

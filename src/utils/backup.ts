@@ -1,10 +1,21 @@
-import type { Bill, BillShare, FinanceData, Member } from '../types'
+import type { Area, Bill, BillShare, FinanceData, LegacyFinanceDataV1, Member } from '../types'
+import {
+  HOME_AREA_ID,
+  MAX_AREA_NAME_LENGTH,
+  MAX_AREAS,
+  cleanAreaName,
+  migrateV1ToV2,
+} from './areas'
 import { MAX_AMOUNT_CENTS } from './money'
 
 /** Identifica o arquivo como backup deste aplicativo. */
 export const BACKUP_FORMAT = 'contas-da-familia-backup'
-/** Aumente este número quando o formato do arquivo mudar. */
-export const BACKUP_FORMAT_VERSION = 1
+/**
+ * Aumente este número quando o formato do arquivo mudar.
+ * 1: { members, bills } (uma área implícita). 2: { areas }.
+ * Backups da versão 1 continuam sendo aceitos e são convertidos na importação.
+ */
+export const BACKUP_FORMAT_VERSION = 2
 
 /** Limites para recusar arquivos absurdos antes de processá-los. */
 export const MAX_BACKUP_FILE_BYTES = 5 * 1024 * 1024
@@ -22,13 +33,13 @@ export interface BackupFile {
   formatVersion: typeof BACKUP_FORMAT_VERSION
   createdAt: string
   data: {
-    members: Member[]
-    bills: Bill[]
+    areas: Area[]
   }
 }
 
 export interface BackupSummary {
   createdAt: Date
+  areaCount: number
   memberCount: number
   billCount: number
   monthCount: number
@@ -45,8 +56,7 @@ export function createBackup(data: FinanceData, now: Date): BackupFile {
     formatVersion: BACKUP_FORMAT_VERSION,
     createdAt: now.toISOString(),
     data: {
-      members: data.members.map(sanitizeMember),
-      bills: data.bills.map(sanitizeBill),
+      areas: data.areas.map(sanitizeArea),
     },
   }
 }
@@ -132,6 +142,16 @@ function sanitizeBill(bill: Bill): Bill {
   return clean
 }
 
+function sanitizeArea(area: Area): Area {
+  return {
+    id: area.id,
+    name: area.name,
+    type: area.type,
+    members: area.members.map(sanitizeMember),
+    bills: area.bills.map(sanitizeBill),
+  }
+}
+
 function validateMember(value: unknown, position: number, seenIds: Set<string>): Member {
   const label = `O integrante nº ${position}`
   if (!isPlainObject(value)) fail(`${label} não está no formato esperado.`)
@@ -203,7 +223,7 @@ function validateBill(
     if (!isPlainObject(share)) fail(`${label} tem uma divisão em formato inválido.`)
     const { memberId, amountCents } = share
     if (typeof memberId !== 'string' || !memberIds.has(memberId)) {
-      fail(`${label} está ligada a uma pessoa que não existe na lista da família.`)
+      fail(`${label} está ligada a uma pessoa que não existe entre os membros da área.`)
     }
     if (shareMemberIds.has(memberId)) fail(`${label} repete a mesma pessoa na divisão.`)
     shareMemberIds.add(memberId)
@@ -242,7 +262,7 @@ function validateBackup(raw: unknown): { data: FinanceData; summary: BackupSumma
   if (formatVersion > BACKUP_FORMAT_VERSION) {
     fail('Este backup foi feito por uma versão mais nova do aplicativo e não pode ser lido aqui.')
   }
-  if (formatVersion !== BACKUP_FORMAT_VERSION) {
+  if (formatVersion !== 1 && formatVersion !== 2) {
     fail('Esta versão de backup não é reconhecida.')
   }
 
@@ -252,46 +272,117 @@ function validateBackup(raw: unknown): { data: FinanceData; summary: BackupSumma
   }
 
   if (!isPlainObject(data)) fail('O backup está sem os dados do aplicativo.')
-  const cleanData = validateFinanceContent(data.members, data.bills)
+  // Versão 1: uma área implícita, convertida para "Gastos da casa" sem alterar os dados.
+  const cleanData =
+    formatVersion === 1
+      ? migrateV1ToV2(validateLegacyContent(data.members, data.bills))
+      : validateAreas(data.areas)
 
+  const allBills = cleanData.areas.flatMap((area) => area.bills)
   return {
     data: cleanData,
     summary: {
       createdAt: createdAtDate,
-      memberCount: cleanData.members.length,
-      billCount: cleanData.bills.length,
-      monthCount: new Set(cleanData.bills.map((bill) => bill.month)).size,
+      areaCount: cleanData.areas.length,
+      memberCount: cleanData.areas.reduce((sum, area) => sum + area.members.length, 0),
+      billCount: allBills.length,
+      monthCount: new Set(allBills.map((bill) => bill.month)).size,
     },
   }
 }
 
-/** Regras comuns ao backup e aos dados salvos no navegador. */
-function validateFinanceContent(members: unknown, bills: unknown): FinanceData {
-  if (!Array.isArray(members) || members.length === 0) {
-    fail('Nenhum integrante da família foi encontrado.')
-  }
+/** Valida membros e contas de uma área (mesmas regras de sempre). */
+function validateMembersAndBills(
+  members: unknown[],
+  bills: unknown[],
+  billIds: Set<string>,
+): { members: Member[]; bills: Bill[] } {
   if (members.length > MAX_MEMBERS) fail('Há integrantes demais.')
-  if (!Array.isArray(bills)) fail('A lista de contas não foi encontrada.')
-  if (bills.length > MAX_BILLS) fail('Há contas demais.')
-
   const memberIds = new Set<string>()
   const cleanMembers = members.map((member, index) =>
     validateMember(member, index + 1, memberIds),
   )
-
-  const billIds = new Set<string>()
   const cleanBills = bills.map((bill, index) =>
     validateBill(bill, index + 1, memberIds, billIds),
   )
+  return { members: cleanMembers, bills: cleanBills }
+}
 
-  return { version: 1, members: cleanMembers, bills: cleanBills }
+/** Dados da versão 1 ({ members, bills }), como eram validados antes das áreas. */
+function validateLegacyContent(members: unknown, bills: unknown): LegacyFinanceDataV1 {
+  if (!Array.isArray(members) || members.length === 0) {
+    fail('Nenhum integrante da família foi encontrado.')
+  }
+  if (!Array.isArray(bills)) fail('A lista de contas não foi encontrada.')
+  if (bills.length > MAX_BILLS) fail('Há contas demais.')
+  return { version: 1, ...validateMembersAndBills(members, bills, new Set()) }
+}
+
+function validateArea(
+  value: unknown,
+  position: number,
+  areaIds: Set<string>,
+  billIds: Set<string>,
+): Area {
+  const label = `A área nº ${position}`
+  if (!isPlainObject(value)) fail(`${label} não está no formato esperado.`)
+
+  const { id, name, type, members, bills } = value
+  if (!isValidId(id)) fail(`${label} está sem um identificador válido.`)
+  if (areaIds.has(id)) fail(`Há duas áreas com o mesmo identificador (“${id}”).`)
+  areaIds.add(id)
+
+  if (typeof name !== 'string' || !cleanAreaName(name)) fail(`${label} está sem nome.`)
+  const cleanName = cleanAreaName(name)
+  if (cleanName.length > MAX_AREA_NAME_LENGTH) {
+    fail(`O nome da área “${cleanName}” é maior que ${MAX_AREA_NAME_LENGTH} caracteres.`)
+  }
+  if (type !== 'individual' && type !== 'shared') {
+    fail(`A área “${cleanName}” tem um tipo inválido.`)
+  }
+  if (!Array.isArray(members)) fail(`A área “${cleanName}” está sem a lista de membros.`)
+  if (!Array.isArray(bills)) fail(`A área “${cleanName}” está sem a lista de contas.`)
+  if (type === 'individual' && members.length > 0) {
+    fail(`A área individual “${cleanName}” não pode ter membros.`)
+  }
+
+  try {
+    const content = validateMembersAndBills(members, bills, billIds)
+    return { id, name: cleanName, type, ...content }
+  } catch (error) {
+    if (error instanceof BackupValidationError) fail(`Na área “${cleanName}”: ${error.message}`)
+    throw error
+  }
+}
+
+/** Dados da versão 2 ({ areas }). A área "Gastos da casa" é obrigatória. */
+function validateAreas(areas: unknown): FinanceData {
+  if (!Array.isArray(areas) || areas.length === 0) fail('Nenhuma área foi encontrada.')
+  if (areas.length > MAX_AREAS) fail('Há áreas demais.')
+
+  const areaIds = new Set<string>()
+  // Ids de contas únicos em todas as áreas, para nenhuma conta aparecer em duas áreas.
+  const billIds = new Set<string>()
+  const cleanAreas = areas.map((area, index) => validateArea(area, index + 1, areaIds, billIds))
+  if (billIds.size > MAX_BILLS) fail('Há contas demais.')
+
+  const home = cleanAreas.find((area) => area.id === HOME_AREA_ID)
+  if (!home) fail('A área “Gastos da casa” não foi encontrada.')
+  if (home.type !== 'shared') fail('A área “Gastos da casa” precisa ser compartilhada.')
+  if (home.members.length === 0) fail('A área “Gastos da casa” não tem nenhum membro.')
+
+  return { version: 2, areas: cleanAreas }
 }
 
 export type StoredDataParseResult =
   | { ok: true; data: FinanceData }
   | { ok: false; error: string }
 
-/** Lê e valida os dados salvos no navegador com as mesmas regras do backup. */
+/**
+ * Lê e valida os dados salvos no navegador com as mesmas regras do backup.
+ * Dados da versão 1 são convertidos para a versão 2 apenas na memória; a chave
+ * só é regravada quando a pessoa fizer alguma alteração.
+ */
 export function parseStoredData(text: string): StoredDataParseResult {
   let raw: unknown
   try {
@@ -301,10 +392,13 @@ export function parseStoredData(text: string): StoredDataParseResult {
   }
 
   try {
-    if (!isPlainObject(raw) || raw.version !== 1) {
-      fail('Os dados salvos estão em um formato ou versão que este aplicativo não reconhece.')
+    if (isPlainObject(raw) && raw.version === 1) {
+      return { ok: true, data: migrateV1ToV2(validateLegacyContent(raw.members, raw.bills)) }
     }
-    return { ok: true, data: validateFinanceContent(raw.members, raw.bills) }
+    if (isPlainObject(raw) && raw.version === 2) {
+      return { ok: true, data: validateAreas(raw.areas) }
+    }
+    fail('Os dados salvos estão em um formato ou versão que este aplicativo não reconhece.')
   } catch (error) {
     if (error instanceof BackupValidationError) return { ok: false, error: error.message }
     return { ok: false, error: 'Os dados salvos estão com problemas e não podem ser usados.' }

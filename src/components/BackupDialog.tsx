@@ -38,6 +38,8 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
   const cancelRestoreRef = useRef<HTMLButtonElement>(null)
   const previousStatus = useRef(restore.status)
   const fileInputId = useId()
+  const memberTotal = data.areas.reduce((sum, area) => sum + area.members.length, 0)
+  const billTotal = data.areas.reduce((sum, area) => sum + area.bills.length, 0)
 
   // Na confirmação, o foco vai para "Cancelar" (ação mais segura); ao sair dela,
   // volta para a escolha de arquivo em vez de se perder na página.
@@ -108,9 +110,10 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
             Salvar uma cópia
           </h3>
           <p className="backup-section__text">
-            Baixa um arquivo com os membros e todas as contas (
-            {plural(data.members.length, 'integrante', 'integrantes')} e{' '}
-            {plural(data.bills.length, 'conta', 'contas')}). Guarde-o em um lugar seguro.
+            Baixa um arquivo com todas as áreas, membros e contas (
+            {plural(data.areas.length, 'área', 'áreas')},{' '}
+            {plural(memberTotal, 'integrante', 'integrantes')} e{' '}
+            {plural(billTotal, 'conta', 'contas')}). Guarde-o em um lugar seguro.
           </p>
           <div>
             <button
@@ -172,6 +175,7 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
                 </li>
                 <li>Feito em {dateTimeFormatter.format(restore.summary.createdAt)}</li>
                 <li>
+                  {plural(restore.summary.areaCount, 'área', 'áreas')},{' '}
                   {plural(restore.summary.memberCount, 'integrante', 'integrantes')},{' '}
                   {plural(restore.summary.billCount, 'conta', 'contas')} em{' '}
                   {plural(restore.summary.monthCount, 'mês', 'meses')}
