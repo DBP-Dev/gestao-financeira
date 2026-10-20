@@ -15,13 +15,8 @@ export function DeleteMemberDialog({ member, blockers, onConfirm, onCancel }: De
   if (blockers.length === 0) {
     return (
       <ConfirmDialog
-        title={`Excluir ${member.name}?`}
-        message={
-          <>
-            <strong>{member.name}</strong> não participa de nenhuma conta e será removido(a) da
-            família. Essa ação não pode ser desfeita.
-          </>
-        }
+        title={`Excluir “${member.name}”?`}
+        message="Este membro não participa de nenhuma conta. A exclusão não pode ser desfeita."
         confirmLabel="Sim, excluir"
         onConfirm={onConfirm}
         onCancel={onCancel}
@@ -30,7 +25,7 @@ export function DeleteMemberDialog({ member, blockers, onConfirm, onCancel }: De
   }
 
   return (
-    <Modal title={`Não é possível excluir ${member.name}`} onClose={onCancel} size="small">
+    <Modal title={`Não é possível excluir “${member.name}”`} onClose={onCancel} size="small">
       <div className="modal__body">
         <ul className="blockers" role="alert">
           {blockers.map((reason) => (
@@ -40,7 +35,12 @@ export function DeleteMemberDialog({ member, blockers, onConfirm, onCancel }: De
         <p className="confirm__message">Nenhum dado foi alterado.</p>
       </div>
       <div className="modal__footer">
-        <button type="button" className="button button--primary" onClick={onCancel}>
+        <button
+          type="button"
+          className="button button--primary"
+          onClick={onCancel}
+          data-autofocus
+        >
           Entendi
         </button>
       </div>

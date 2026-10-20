@@ -22,7 +22,7 @@ export function ConfirmDialog({
         <p className="confirm__message">{message}</p>
       </div>
       <div className="modal__footer">
-        <button type="button" className="button button--ghost" onClick={onCancel}>
+        <button type="button" className="button button--ghost" onClick={onCancel} data-autofocus>
           Cancelar
         </button>
         <button type="button" className="button button--danger" onClick={onConfirm}>

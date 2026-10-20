@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react'
 import type { FinanceData } from '../types'
 import {
   MAX_BACKUP_FILE_BYTES,
@@ -35,7 +35,17 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
   const [exportedFileName, setExportedFileName] = useState<string | null>(null)
   const [restore, setRestore] = useState<RestoreState>({ status: 'idle' })
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cancelRestoreRef = useRef<HTMLButtonElement>(null)
+  const previousStatus = useRef(restore.status)
   const fileInputId = useId()
+
+  // Na confirmação, o foco vai para "Cancelar" (ação mais segura); ao sair dela,
+  // volta para a escolha de arquivo em vez de se perder na página.
+  useEffect(() => {
+    if (restore.status === 'ready') cancelRestoreRef.current?.focus()
+    else if (previousStatus.current === 'ready') fileInputRef.current?.focus()
+    previousStatus.current = restore.status
+  }, [restore.status])
 
   function handleExport() {
     const now = new Date()
@@ -103,7 +113,12 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
             {plural(data.bills.length, 'conta', 'contas')}). Guarde-o em um lugar seguro.
           </p>
           <div>
-            <button type="button" className="button button--primary" onClick={handleExport}>
+            <button
+              type="button"
+              className="button button--primary"
+              onClick={handleExport}
+              data-autofocus
+            >
               Baixar backup
             </button>
           </div>
@@ -168,6 +183,7 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
               </p>
               <div className="backup-confirm__actions">
                 <button
+                  ref={cancelRestoreRef}
                   type="button"
                   className="button button--ghost"
                   onClick={() => setRestore({ status: 'idle' })}

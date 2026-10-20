@@ -790,7 +790,13 @@
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--surface-hover);
-  border: 1px solid var(--border-strong);
+  /*
+   * Fundo tingido com 28% da cor do membro e contorno sólido na mesma cor.
+   * Com 28%, a inicial clara mantém contraste AA (≥ 4,5:1) em todas as cores da paleta.
+   * Sem cor válida, fica o fundo e o contorno neutros.
+   */
+  background: color-mix(in srgb, var(--member-color, var(--surface-hover)) 28%, var(--surface-hover));
+  border: 2px solid var(--member-color, var(--border-strong));
   color: var(--text);
   font-weight: 650;
   line-height: 1;
@@ -1056,6 +1062,48 @@
   justify-content: center;
 }
 
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.color-swatch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-shadow: 0 0 0 1px var(--border-strong);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.color-swatch:hover {
+  transform: scale(1.08);
+}
+
+/* Selecionada: anel claro afastado do círculo e marca ✓ (não depende só da cor). */
+.color-swatch--selected {
+  box-shadow:
+    0 0 0 3px var(--surface),
+    0 0 0 5px var(--text);
+}
+
+.color-swatch:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 6px;
+}
+
+.color-swatch__check {
+  color: var(--text-on-accent);
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
 /* ---------- Formulário ---------- */
 
 .bill-form__intro {
@@ -1199,10 +1247,6 @@ select.input option {
   border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent);
-}
-
-.member-chip--selected .avatar {
-  border-color: var(--accent-border);
 }
 
 .split-box {

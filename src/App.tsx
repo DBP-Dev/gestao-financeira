@@ -10,7 +10,7 @@ import { FamilyMembers } from './components/FamilyMembers'
 import { MonthSummary } from './components/MonthSummary'
 import { PersonalPanel } from './components/PersonalPanel'
 import { DeleteMemberDialog } from './components/DeleteMemberDialog'
-import { MemberFormDialog } from './components/MemberFormDialog'
+import { MemberFormDialog, type MemberFormValues } from './components/MemberFormDialog'
 import { StorageWarning } from './components/StorageWarning'
 import { useCurrentMember } from './hooks/useCurrentMember'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
@@ -54,13 +54,24 @@ function App() {
   const previousMonthHasBills = store.bills.some((bill) => bill.month === previousMonth)
   const hasExamples = store.bills.some((bill) => bill.isExample)
 
-  function handleSaveMember(name: string) {
+  function handleSaveMember({ name, color }: MemberFormValues) {
     if (memberForm?.mode === 'edit') {
-      store.renameMember(memberForm.member.id, name)
-      setMemberFeedback(`✓ Nome alterado para “${name}”.`)
+      const { member } = memberForm
+      const nameChanged = name !== member.name
+      const colorChanged = color !== member.color
+      if (nameChanged || colorChanged) {
+        store.updateMember(member.id, { name, color })
+        setMemberFeedback(
+          nameChanged && colorChanged
+            ? '✓ Membro atualizado com sucesso.'
+            : nameChanged
+              ? '✓ Nome atualizado com sucesso.'
+              : '✓ Cor atualizada com sucesso.',
+        )
+      }
     } else {
-      store.addMember(createMember(name))
-      setMemberFeedback(`✓ ${name} foi adicionado(a) à família.`)
+      store.addMember(createMember(name, store.members, color))
+      setMemberFeedback('✓ Membro adicionado com sucesso.')
     }
     setMemberForm(null)
   }
@@ -226,7 +237,7 @@ function App() {
           )}
           onConfirm={() => {
             store.deleteMember(memberToDelete.id)
-            setMemberFeedback(`✓ ${memberToDelete.name} foi excluído(a) da família.`)
+            setMemberFeedback('✓ Membro excluído com sucesso.')
             setMemberToDelete(null)
           }}
           onCancel={() => setMemberToDelete(null)}

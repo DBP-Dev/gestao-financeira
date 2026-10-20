@@ -119,6 +119,7 @@ export function BillFormDialog({ bill, month, members, onSave, onCancel }: BillF
             </label>
             <input
               id={`${fieldId}-name`}
+              data-autofocus
               className="input"
               list={`${fieldId}-suggestions`}
               value={draft.name}

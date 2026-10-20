@@ -180,11 +180,12 @@ export function useFinanceStore() {
     }))
   }
 
-  function renameMember(id: string, name: string) {
+  /** Atualiza o perfil exibido (nome e cor). O id e as contas não mudam. */
+  function updateMember(id: string, changes: Pick<Member, 'name' | 'color'>) {
     setData((current) => ({
       ...current,
       members: current.members.map((member) =>
-        member.id === id ? { ...member, name } : member,
+        member.id === id ? { ...member, name: changes.name, color: changes.color } : member,
       ),
     }))
   }
@@ -220,7 +221,7 @@ export function useFinanceStore() {
     togglePaid,
     copyBills,
     deleteExamples,
-    renameMember,
+    updateMember,
     addMember,
     deleteMember,
     replaceAllData,

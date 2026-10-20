@@ -7,14 +7,22 @@ interface ModalProps {
   size?: 'small' | 'large'
 }
 
-/** Janela sobreposta acessível (fecha com Esc e mantém o foco dentro dela). */
+/**
+ * Janela sobreposta acessível (fecha com Esc e mantém o foco dentro dela).
+ * O elemento interno marcado com `data-autofocus` recebe o foco ao abrir.
+ */
 export function Modal({ title, onClose, children, size = 'large' }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
 
   useEffect(() => {
     const dialog = dialogRef.current
-    if (dialog && !dialog.open) dialog.showModal()
+    if (dialog && !dialog.open) {
+      dialog.showModal()
+      // O navegador foca o primeiro botão (o de fechar). Cada diálogo indica o foco
+      // inicial certo com data-autofocus: o campo principal ou a ação mais segura.
+      dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus()
+    }
     return () => dialog?.close()
   }, [])
 
