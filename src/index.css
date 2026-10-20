@@ -1,0 +1,95 @@
+/*
+ * Paleta do tema escuro minimalista.
+ * Para ajustar o visual, altere apenas as variáveis abaixo.
+ */
+:root {
+  /* Superfícies */
+  --bg: #121416;
+  --surface: #1a1d20;
+  --surface-raised: #212529;
+  --surface-hover: #282c31;
+  --border: #2c3136;
+  --border-strong: #3c424a;
+
+  /* Texto */
+  --text: #e6e8ea;
+  --text-soft: #9ba2a9;
+  --text-on-accent: #0e1612;
+
+  /* Destaque único (verde discreto) */
+  --accent: #74c69d;
+  --accent-hover: #8ad3ad;
+  --accent-soft: rgb(116 198 157 / 0.12);
+  --accent-border: rgb(116 198 157 / 0.45);
+
+  /* Alerta (usado só para atraso, erros e exclusão) */
+  --danger: #ec8f86;
+  --danger-soft: rgb(236 143 134 / 0.12);
+  --danger-border: rgb(236 143 134 / 0.45);
+
+  /* Foco do teclado */
+  --focus: #a8e6c4;
+
+  --backdrop: rgb(0 0 0 / 0.65);
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 18px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-modal: 0 24px 64px rgb(0 0 0 / 0.55);
+
+  font-family:
+    'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+@media (max-width: 600px) {
+  :root {
+    font-size: 16px;
+  }
+}
