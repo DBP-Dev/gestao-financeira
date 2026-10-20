@@ -1,4 +1,5 @@
 import type { Bill, BillShare, FinanceData, Member } from '../types'
+import { MAX_AMOUNT_CENTS } from './money'
 
 /** Identifica o arquivo como backup deste aplicativo. */
 export const BACKUP_FORMAT = 'contas-da-familia-backup'
@@ -15,8 +16,6 @@ const MAX_ID_LENGTH = 100
 const MAX_MEMBER_NAME_LENGTH = 20
 const MAX_BILL_NAME_LENGTH = 40
 const MAX_EMOJI_LENGTH = 16
-/** R$ 1 bilhão: bem acima de qualquer conta doméstica e longe do limite numérico. */
-const MAX_AMOUNT_CENTS = 100_000_000_000
 
 export interface BackupFile {
   format: typeof BACKUP_FORMAT
