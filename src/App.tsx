@@ -19,9 +19,13 @@ import { useCurrentMember } from './hooks/useCurrentMember'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
 import { useToday } from './hooks/useToday'
 import type { Area, AreaType, Bill, Member } from './types'
-import { HOME_AREA_ID, MAX_AREAS } from './utils/areas'
+import { HOME_AREA_ID, MAX_AREAS, canDeleteArea } from './utils/areas'
 import { addMonths, effectiveDueDay, formatMonthName, getBillStatus } from './utils/dates'
 import { MAX_MEMBERS, createMember, getMemberDeletionBlockers } from './utils/members'
+
+function plural(count: number, singular: string, pluralForm: string) {
+  return `${count} ${count === 1 ? singular : pluralForm}`
+}
 
 /** Toda conta pertence a uma área: o formulário e a exclusão sabem qual é. */
 type BillFormState =
@@ -43,6 +47,7 @@ function App() {
   }
   const [billForm, setBillForm] = useState<BillFormState>(null)
   const [billToDelete, setBillToDelete] = useState<{ areaId: string; bill: Bill } | null>(null)
+  const [areaToDelete, setAreaToDelete] = useState<Area | null>(null)
   /** Área compartilhada sem participantes em que a pessoa tentou adicionar uma conta. */
   const [noParticipantsAreaId, setNoParticipantsAreaId] = useState<string | null>(null)
   const [memberForm, setMemberForm] = useState<MemberFormState>(null)
@@ -214,7 +219,7 @@ function App() {
             <p className="account-group__empty">Nenhuma área individual foi criada ainda.</p>
           ) : (
             individualAreas.map((area) => (
-              <AreaCard key={area.id} area={area}>
+              <AreaCard key={area.id} area={area} onDelete={() => setAreaToDelete(area)}>
                 {renderAreaBills(area)}
               </AreaCard>
             ))
@@ -264,7 +269,7 @@ function App() {
             />
           </FamilyArea>
           {otherSharedAreas.map((area) => (
-            <AreaCard key={area.id} area={area}>
+            <AreaCard key={area.id} area={area} onDelete={() => setAreaToDelete(area)}>
               {renderAreaBills(area)}
             </AreaCard>
           ))}
@@ -330,6 +335,33 @@ function App() {
             setBillToDelete(null)
           }}
           onCancel={() => setBillToDelete(null)}
+        />
+      )}
+
+      {areaToDelete && canDeleteArea(areaToDelete.id) && (
+        <ConfirmDialog
+          title={`Excluir a área “${areaToDelete.name}”?`}
+          message={
+            <>
+              A área <strong>{areaToDelete.name}</strong> será excluída permanentemente, junto
+              com todos os seus participantes e lançamentos (
+              {areaToDelete.type === 'shared' &&
+                `${plural(areaToDelete.members.length, 'participante', 'participantes')} e `}
+              {plural(areaToDelete.bills.length, 'lançamento', 'lançamentos')}, contando todos os
+              meses). Essa ação não pode ser desfeita.
+            </>
+          }
+          confirmLabel="Sim, excluir área"
+          onConfirm={() => {
+            store.deleteArea(areaToDelete.id)
+            if (noParticipantsAreaId === areaToDelete.id) setNoParticipantsAreaId(null)
+            setAreaFeedback({
+              type: areaToDelete.type,
+              text: `✓ Área “${areaToDelete.name}” excluída com sucesso.`,
+            })
+            setAreaToDelete(null)
+          }}
+          onCancel={() => setAreaToDelete(null)}
         />
       )}
 

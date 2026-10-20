@@ -61,6 +61,20 @@ export function validateAreaName(name: string, areas: Area[]): string | null {
   return null
 }
 
+/** Só áreas criadas pela pessoa podem ser excluídas; "Gastos da casa" é fixa. */
+export function canDeleteArea(areaId: string): boolean {
+  return areaId !== HOME_AREA_ID
+}
+
+/**
+ * Remove uma área com todos os seus participantes e contas.
+ * Se a área for "Gastos da casa" ou não existir, devolve os dados sem nenhuma mudança.
+ */
+export function removeArea(data: FinanceData, areaId: string): FinanceData {
+  if (!canDeleteArea(areaId) || !data.areas.some((area) => area.id === areaId)) return data
+  return { ...data, areas: data.areas.filter((area) => area.id !== areaId) }
+}
+
 /** Nova área vazia, com id próprio que não repete nenhum id existente. */
 export function createArea(name: string, type: AreaType, areas: Area[]): Area {
   const usedIds = new Set(areas.map((area) => area.id))

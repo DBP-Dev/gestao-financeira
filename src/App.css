@@ -485,6 +485,13 @@
   overflow-wrap: anywhere;
 }
 
+.area-card__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .area-card__meta {
   color: var(--text-soft);
   font-size: 0.9rem;

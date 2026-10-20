@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_MEMBERS, createInitialData } from '../data/sampleData'
 import type { Area, AreaType, Bill, FinanceData, Member, MonthKey } from '../types'
-import { HOME_AREA_ID, createArea, getHomeArea, migrateV1ToV2 } from '../utils/areas'
+import {
+  HOME_AREA_ID,
+  createArea,
+  getHomeArea,
+  migrateV1ToV2,
+  removeArea,
+} from '../utils/areas'
 import { parseStoredData } from '../utils/backup'
 import { getToday } from '../utils/dates'
 import { createId } from '../utils/ids'
@@ -228,6 +234,11 @@ export function useFinanceStore() {
     }))
   }
 
+  /** Exclui uma área e todos os seus dados. "Gastos da casa" nunca é excluída. */
+  function deleteArea(areaId: string) {
+    setData((current) => removeArea(current, areaId))
+  }
+
   /** Substitui todos os dados de uma vez (usado ao restaurar um backup já validado). */
   function replaceAllData(next: FinanceData) {
     setData(next)
@@ -252,6 +263,7 @@ export function useFinanceStore() {
     addMember,
     deleteMember,
     addArea,
+    deleteArea,
     replaceAllData,
   }
 }
