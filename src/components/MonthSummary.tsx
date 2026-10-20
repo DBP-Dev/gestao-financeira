@@ -16,7 +16,8 @@ export function MonthSummary({ bills, overdueBills, onMarkPaid }: MonthSummaryPr
     .reduce((sum, bill) => sum + bill.totalCents, 0)
   const pending = total - paid
   const paidCount = bills.filter((bill) => bill.paid).length
-  const progress = total > 0 ? Math.round((paid / total) * 100) : 0
+  // Arredonda para baixo: só chega a 100% quando não falta nada a pagar.
+  const progress = total > 0 ? Math.floor((paid * 100) / total) : 0
 
   return (
     <section className="summary" aria-label="Resumo do mês">
