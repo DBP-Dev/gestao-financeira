@@ -69,6 +69,8 @@ export function BillFormDialog({ bill, month, members, onSave, onCancel }: BillF
 
   function changeSplitMode(mode: SplitMode) {
     setDraft((current) => {
+      // Clicar no modo que já está ativo não deve mudar nada.
+      if (current.splitMode === mode) return current
       if (mode === 'custom') {
         // Começa a personalização a partir da divisão igual, para facilitar.
         const totalCents = parseMoneyInput(current.total)
