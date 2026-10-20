@@ -7,6 +7,7 @@ import { BillList } from './components/BillList'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { FamilyMembers } from './components/FamilyMembers'
 import { MonthSummary } from './components/MonthSummary'
+import { PersonalPanel } from './components/PersonalPanel'
 import { RenameMemberDialog } from './components/RenameMemberDialog'
 import { StorageWarning } from './components/StorageWarning'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
@@ -60,6 +61,12 @@ function App() {
 
       <main className="app__content">
         {store.storageIssue && <StorageWarning issue={store.storageIssue} />}
+
+        <PersonalPanel
+          bills={monthBills}
+          members={store.members}
+          monthName={formatMonthName(month)}
+        />
 
         {hasExamples && (
           <div className="notice" role="note">

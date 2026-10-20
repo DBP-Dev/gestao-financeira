@@ -244,6 +244,163 @@
   vertical-align: middle;
 }
 
+/* ---------- Painel Pessoal ---------- */
+
+.personal-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  grid-template-areas:
+    'identity areas totals'
+    'distribution distribution distribution';
+  align-items: center;
+  gap: 18px 24px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.personal-panel--choose {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.personal-panel__identity {
+  grid-area: identity;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.personal-panel__identity .avatar--large {
+  margin-bottom: 0;
+}
+
+.personal-panel__title {
+  font-size: 1.2rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.personal-panel__hint {
+  color: var(--text-soft);
+  font-size: 0.92rem;
+}
+
+.personal-panel__choose {
+  max-width: 320px;
+}
+
+.personal-panel__areas {
+  grid-area: areas;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.personal-area {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+}
+
+.personal-area__name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.personal-area__total {
+  font-variant-numeric: tabular-nums;
+}
+
+.personal-panel__totals {
+  grid-area: totals;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 0;
+}
+
+.personal-panel__total {
+  text-align: right;
+}
+
+.personal-panel__total dt {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.personal-panel__total dd {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.personal-panel__total--pending dd {
+  font-size: 1.15rem;
+}
+
+.personal-panel__distribution {
+  grid-area: distribution;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.segmented-bar {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--surface-hover);
+  overflow: hidden;
+}
+
+.segmented-bar__segment {
+  flex-basis: 0;
+  min-width: 4px;
+}
+
+.segmented-bar__segment--familia {
+  background: var(--area-familia);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  color: var(--text-soft);
+}
+
+.legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
 /* ---------- Aviso de exemplos ---------- */
 
 .notice {
@@ -1135,6 +1292,14 @@ select.input option {
 /* ---------- Responsivo ---------- */
 
 @media (max-width: 860px) {
+  .personal-panel {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'identity totals'
+      'areas areas'
+      'distribution distribution';
+  }
+
   .members {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -1166,6 +1331,30 @@ select.input option {
   .month-selector__label {
     flex: 1;
     min-width: 0;
+  }
+
+  .personal-panel {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'identity'
+      'totals'
+      'areas'
+      'distribution';
+    padding: 16px;
+  }
+
+  .personal-panel__totals {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .personal-panel__total--pending {
+    text-align: right;
+  }
+
+  .personal-panel__total:first-child {
+    text-align: left;
   }
 
   .summary__grid {

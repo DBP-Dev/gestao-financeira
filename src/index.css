@@ -27,6 +27,9 @@
   --danger-soft: rgb(236 143 134 / 0.12);
   --danger-border: rgb(236 143 134 / 0.45);
 
+  /* Cores das áreas no Painel Pessoal (uma por área) */
+  --area-familia: var(--accent);
+
   /* Foco do teclado */
   --focus: #a8e6c4;
 
