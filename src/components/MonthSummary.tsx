@@ -1,11 +1,15 @@
 import type { Bill } from '../types'
 import { formatBRL } from '../utils/money'
+import { OverdueBills } from './OverdueBills'
 
 interface MonthSummaryProps {
   bills: Bill[]
+  /** Contas atrasadas de meses anteriores (não entram nos totais do mês). */
+  overdueBills: Bill[]
+  onMarkPaid: (bill: Bill) => void
 }
 
-export function MonthSummary({ bills }: MonthSummaryProps) {
+export function MonthSummary({ bills, overdueBills, onMarkPaid }: MonthSummaryProps) {
   const total = bills.reduce((sum, bill) => sum + bill.totalCents, 0)
   const paid = bills
     .filter((bill) => bill.paid)
@@ -48,6 +52,7 @@ export function MonthSummary({ bills }: MonthSummaryProps) {
           </span>
         </div>
       )}
+      <OverdueBills bills={overdueBills} onMarkPaid={onMarkPaid} />
     </section>
   )
 }

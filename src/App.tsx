@@ -11,7 +11,7 @@ import { RenameMemberDialog } from './components/RenameMemberDialog'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
 import { useToday } from './hooks/useToday'
 import type { Bill, Member } from './types'
-import { addMonths, formatMonthName } from './utils/dates'
+import { addMonths, effectiveDueDay, formatMonthName, getBillStatus } from './utils/dates'
 
 type BillFormState = { mode: 'new' } | { mode: 'edit'; bill: Bill } | null
 
@@ -33,6 +33,13 @@ function App() {
   const [showBackup, setShowBackup] = useState(false)
 
   const monthBills = store.bills.filter((bill) => bill.month === month)
+  // Meses anteriores ao selecionado: nunca se misturam com os totais do mês.
+  const overdueBills = store.bills
+    .filter((bill) => bill.month < month && getBillStatus(bill, today) === 'late')
+    .sort(
+      (a, b) =>
+        a.month.localeCompare(b.month) || effectiveDueDay(a) - effectiveDueDay(b),
+    )
   const previousMonth = addMonths(month, -1)
   const previousMonthHasBills = store.bills.some((bill) => bill.month === previousMonth)
   const hasExamples = store.bills.some((bill) => bill.isExample)
@@ -68,7 +75,11 @@ function App() {
           </div>
         )}
 
-        <MonthSummary bills={monthBills} />
+        <MonthSummary
+          bills={monthBills}
+          overdueBills={overdueBills}
+          onMarkPaid={(bill) => store.togglePaid(bill.id)}
+        />
 
         <FamilyMembers
           members={store.members}
