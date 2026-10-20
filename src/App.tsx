@@ -18,12 +18,16 @@ import { StorageWarning } from './components/StorageWarning'
 import { useCurrentMember } from './hooks/useCurrentMember'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
 import { useToday } from './hooks/useToday'
-import type { AreaType, Bill, Member } from './types'
+import type { Area, AreaType, Bill, Member } from './types'
 import { HOME_AREA_ID, MAX_AREAS } from './utils/areas'
 import { addMonths, effectiveDueDay, formatMonthName, getBillStatus } from './utils/dates'
 import { MAX_MEMBERS, createMember, getMemberDeletionBlockers } from './utils/members'
 
-type BillFormState = { mode: 'new' } | { mode: 'edit'; bill: Bill } | null
+/** Toda conta pertence a uma área: o formulário e a exclusão sabem qual é. */
+type BillFormState =
+  | { mode: 'new'; areaId: string }
+  | { mode: 'edit'; areaId: string; bill: Bill }
+  | null
 type MemberFormState = { mode: 'new' } | { mode: 'edit'; member: Member } | null
 
 function App() {
@@ -38,7 +42,9 @@ function App() {
     if (month === lastTodayMonth) setMonth(today.month)
   }
   const [billForm, setBillForm] = useState<BillFormState>(null)
-  const [billToDelete, setBillToDelete] = useState<Bill | null>(null)
+  const [billToDelete, setBillToDelete] = useState<{ areaId: string; bill: Bill } | null>(null)
+  /** Área compartilhada sem participantes em que a pessoa tentou adicionar uma conta. */
+  const [noParticipantsAreaId, setNoParticipantsAreaId] = useState<string | null>(null)
   const [memberForm, setMemberForm] = useState<MemberFormState>(null)
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null)
   const [memberFeedback, setMemberFeedback] = useState<string | null>(null)
@@ -122,12 +128,48 @@ function App() {
 
   function handleSaveBill(input: BillInput) {
     if (billForm?.mode === 'edit') {
-      store.updateBill(billForm.bill.id, input)
-    } else {
-      store.addBill(input)
+      store.updateBill(billForm.areaId, billForm.bill.id, input)
+    } else if (billForm) {
+      store.addBill(billForm.areaId, input)
     }
     setBillForm(null)
   }
+
+  /** Lista de contas de uma área nova, com as mesmas ações da lista de "Gastos da casa". */
+  function renderAreaBills(area: Area) {
+    const areaMonthBills = area.bills.filter((bill) => bill.month === month)
+    const needsParticipants = area.type === 'shared' && area.members.length === 0
+    return (
+      <BillList
+        bills={areaMonthBills}
+        members={area.members}
+        today={today}
+        monthName={formatMonthName(month)}
+        previousMonthName={formatMonthName(previousMonth)}
+        canCopyPreviousMonth={area.bills.some((bill) => bill.month === previousMonth)}
+        onAdd={() =>
+          needsParticipants
+            ? setNoParticipantsAreaId(area.id)
+            : setBillForm({ mode: 'new', areaId: area.id })
+        }
+        onCopyPreviousMonth={() => store.copyBills(area.id, previousMonth, month)}
+        onTogglePaid={(bill) => store.togglePaid(area.id, bill.id)}
+        onEdit={(bill) => setBillForm({ mode: 'edit', areaId: area.id, bill })}
+        onDelete={(bill) => setBillToDelete({ areaId: area.id, bill })}
+        notice={
+          needsParticipants &&
+          noParticipantsAreaId === area.id && (
+            <p className="backup-message backup-message--error" role="alert">
+              Para criar contas nesta área compartilhada, é preciso cadastrar participantes
+              nela antes. Os participantes de “Gastos da casa” não são usados em outras áreas.
+            </p>
+          )
+        }
+      />
+    )
+  }
+
+  const billFormArea = billForm ? store.areas.find((area) => area.id === billForm.areaId) : null
 
   return (
     <div className="app">
@@ -171,7 +213,11 @@ function App() {
           {individualAreas.length === 0 ? (
             <p className="account-group__empty">Nenhuma área individual foi criada ainda.</p>
           ) : (
-            individualAreas.map((area) => <AreaCard key={area.id} area={area} />)
+            individualAreas.map((area) => (
+              <AreaCard key={area.id} area={area}>
+                {renderAreaBills(area)}
+              </AreaCard>
+            ))
           )}
         </AccountGroup>
 
@@ -190,7 +236,7 @@ function App() {
             <MonthSummary
               bills={monthBills}
               overdueBills={overdueBills}
-              onMarkPaid={(bill) => store.togglePaid(bill.id)}
+              onMarkPaid={(bill) => store.togglePaid(HOME_AREA_ID, bill.id)}
             />
 
             <FamilyMembers
@@ -210,15 +256,17 @@ function App() {
               monthName={formatMonthName(month)}
               previousMonthName={formatMonthName(previousMonth)}
               canCopyPreviousMonth={previousMonthHasBills}
-              onAdd={() => setBillForm({ mode: 'new' })}
-              onCopyPreviousMonth={() => store.copyBills(previousMonth, month)}
-              onTogglePaid={(bill) => store.togglePaid(bill.id)}
-              onEdit={(bill) => setBillForm({ mode: 'edit', bill })}
-              onDelete={setBillToDelete}
+              onAdd={() => setBillForm({ mode: 'new', areaId: HOME_AREA_ID })}
+              onCopyPreviousMonth={() => store.copyBills(HOME_AREA_ID, previousMonth, month)}
+              onTogglePaid={(bill) => store.togglePaid(HOME_AREA_ID, bill.id)}
+              onEdit={(bill) => setBillForm({ mode: 'edit', areaId: HOME_AREA_ID, bill })}
+              onDelete={(bill) => setBillToDelete({ areaId: HOME_AREA_ID, bill })}
             />
           </FamilyArea>
           {otherSharedAreas.map((area) => (
-            <AreaCard key={area.id} area={area} />
+            <AreaCard key={area.id} area={area}>
+              {renderAreaBills(area)}
+            </AreaCard>
           ))}
         </AccountGroup>
       </main>
@@ -255,11 +303,13 @@ function App() {
         />
       )}
 
-      {billForm && (
+      {billForm && billFormArea && (
         <BillFormDialog
           bill={billForm.mode === 'edit' ? billForm.bill : undefined}
           month={month}
-          members={store.members}
+          members={billFormArea.members}
+          areaName={billFormArea.name}
+          individual={billFormArea.type === 'individual'}
           onSave={handleSaveBill}
           onCancel={() => setBillForm(null)}
         />
@@ -270,13 +320,13 @@ function App() {
           title="Excluir conta?"
           message={
             <>
-              A conta <strong>{billToDelete.name}</strong> será removida deste mês. Essa
+              A conta <strong>{billToDelete.bill.name}</strong> será removida deste mês. Essa
               ação não pode ser desfeita.
             </>
           }
           confirmLabel="Sim, excluir"
           onConfirm={() => {
-            store.deleteBill(billToDelete.id)
+            store.deleteBill(billToDelete.areaId, billToDelete.bill.id)
             setBillToDelete(null)
           }}
           onCancel={() => setBillToDelete(null)}

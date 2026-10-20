@@ -490,9 +490,8 @@
   font-size: 0.9rem;
 }
 
-.area-card__empty {
-  color: var(--text-soft);
-  font-size: 0.88rem;
+.area-card__content {
+  margin-top: 8px;
 }
 
 .account-group__empty {
@@ -1593,8 +1592,9 @@ select.input option {
     grid-template-columns: repeat(3, 1fr);
   }
 
+  /* minmax(0, 1fr): o cartão encolhe junto com a coluna em vez de vazar. */
   .bill-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1634,6 +1634,19 @@ select.input option {
 
   .account-group {
     padding: 14px 12px;
+  }
+
+  .area-card {
+    padding: 12px 10px;
+  }
+
+  /* Se o nome e o valor não couberem lado a lado, o valor desce para a linha de baixo. */
+  .bill-card__top {
+    flex-wrap: wrap;
+  }
+
+  .bill-card__top > div:first-child {
+    min-width: 0;
   }
 
   .area__toggle {

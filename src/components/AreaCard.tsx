@@ -1,16 +1,15 @@
+import type { ReactNode } from 'react'
 import type { Area } from '../types'
 import { AREA_TYPE_LABEL } from '../utils/areas'
 
 interface AreaCardProps {
   area: Area
+  /** Conteúdo da área (lista de contas). Mostra só dados da própria área. */
+  children: ReactNode
 }
 
-/**
- * Cartão de uma área criada pela pessoa. Mostra só os dados da própria área.
- * O lançamento de contas em novas áreas ainda não existe, então não há botões
- * nem valores simulados.
- */
-export function AreaCard({ area }: AreaCardProps) {
+/** Cartão de uma área criada pela pessoa. */
+export function AreaCard({ area, children }: AreaCardProps) {
   const memberCount = area.members.length
   return (
     <article className="area-card" aria-label={`Área ${area.name}`}>
@@ -27,11 +26,7 @@ export function AreaCard({ area }: AreaCardProps) {
               : `${memberCount} participantes`}
         </p>
       )}
-      <p className="area-card__empty">
-        {area.bills.length === 0
-          ? 'Nenhuma conta nesta área ainda. O lançamento de contas em novas áreas ainda não está disponível.'
-          : `${area.bills.length} contas nesta área.`}
-      </p>
+      <div className="area-card__content">{children}</div>
     </article>
   )
 }

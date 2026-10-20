@@ -44,24 +44,27 @@ export function BillCard({
         </div>
       </div>
 
-      <div className="bill-card__shares">
-        <span className="bill-card__shares-title">
-          {isSinglePerson ? 'Quem paga' : 'Quanto cada um paga'}
-        </span>
-        <ul className="shares">
-          {bill.shares.map((share) => {
-            const member = members.find((item) => item.id === share.memberId)
-            if (!member) return null
-            return (
-              <li key={share.memberId} className="shares__item">
-                <Avatar member={member} size="small" />
-                <span className="shares__name">{member.name}</span>
-                <span className="shares__value">{formatBRL(share.amountCents)}</span>
-              </li>
-            )
-          })}
-        </ul>
-      </div>
+      {/* Contas de áreas individuais não têm divisão entre pessoas. */}
+      {bill.shares.length > 0 && (
+        <div className="bill-card__shares">
+          <span className="bill-card__shares-title">
+            {isSinglePerson ? 'Quem paga' : 'Quanto cada um paga'}
+          </span>
+          <ul className="shares">
+            {bill.shares.map((share) => {
+              const member = members.find((item) => item.id === share.memberId)
+              if (!member) return null
+              return (
+                <li key={share.memberId} className="shares__item">
+                  <Avatar member={member} size="small" />
+                  <span className="shares__name">{member.name}</span>
+                  <span className="shares__value">{formatBRL(share.amountCents)}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
 
       <div className="bill-card__actions">
         <button

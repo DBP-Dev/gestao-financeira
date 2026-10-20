@@ -75,7 +75,11 @@ export function orderMemberIds(ids: string[], members: Member[]): string[] {
   return members.map((member) => member.id).filter((id) => ids.includes(id))
 }
 
-export function analyzeDraft(draft: BillDraft): DraftAnalysis {
+/**
+ * `individual`: conta de área individual — sem pessoas e sem divisão (`shares` vazio).
+ * As validações de nome, valor e vencimento são as mesmas.
+ */
+export function analyzeDraft(draft: BillDraft, individual = false): DraftAnalysis {
   const errors: DraftErrors = { memberAmounts: {} }
 
   if (!draft.name.trim()) {
@@ -93,6 +97,12 @@ export function analyzeDraft(draft: BillDraft): DraftAnalysis {
   const dueDay = Number(draft.dueDay)
   if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
     errors.dueDay = 'Escolha um dia entre 1 e 31.'
+  }
+
+  if (individual) {
+    const shares: BillShare[] | null = hasValidTotal ? [] : null
+    const isValid = !errors.name && !errors.total && !errors.dueDay && shares !== null
+    return { totalCents, shares, errors, customSumCents: 0, sumMatches: true, isValid }
   }
 
   const count = draft.memberIds.length

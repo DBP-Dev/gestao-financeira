@@ -1,3 +1,4 @@
+import { useId, type ReactNode } from 'react'
 import type { Bill, Member, Today } from '../types'
 import { effectiveDueDay, getBillStatus } from '../utils/dates'
 import { BillCard } from './BillCard'
@@ -14,6 +15,8 @@ interface BillListProps {
   onTogglePaid: (bill: Bill) => void
   onEdit: (bill: Bill) => void
   onDelete: (bill: Bill) => void
+  /** Aviso opcional exibido logo abaixo do cabeçalho da lista. */
+  notice?: ReactNode
 }
 
 export function BillList({
@@ -28,16 +31,19 @@ export function BillList({
   onTogglePaid,
   onEdit,
   onDelete,
+  notice,
 }: BillListProps) {
+  // Id único: pode haver uma lista por área na mesma página.
+  const titleId = useId()
   const sortedBills = [...bills].sort(
     (a, b) => effectiveDueDay(a) - effectiveDueDay(b) || a.name.localeCompare(b.name),
   )
 
   return (
-    <section className="section" aria-labelledby="bills-title">
+    <section className="section" aria-labelledby={titleId}>
       <div className="section__header section__header--with-action">
         <div>
-          <h2 id="bills-title" className="section__title">
+          <h2 id={titleId} className="section__title">
             Contas de {monthName}
           </h2>
           <p className="section__hint">Organizadas pela data de vencimento</p>
@@ -46,6 +52,8 @@ export function BillList({
           ＋ Adicionar conta
         </button>
       </div>
+
+      {notice}
 
       {sortedBills.length === 0 ? (
         <div className="empty-state">

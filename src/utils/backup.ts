@@ -180,6 +180,8 @@ function validateBill(
   position: number,
   memberIds: Set<string>,
   seenIds: Set<string>,
+  /** Contas de áreas individuais não têm divisão: `shares` deve ser vazio. */
+  individual = false,
 ): Bill {
   if (!isPlainObject(value)) fail(`A conta nº ${position} não está no formato esperado.`)
 
@@ -209,6 +211,15 @@ function validateBill(
   if (typeof paid !== 'boolean') fail(`${label} está sem a situação de pagamento.`)
   if (isExample !== undefined && typeof isExample !== 'boolean') {
     fail(`${label} tem uma marcação de exemplo inválida.`)
+  }
+
+  if (individual) {
+    if (!Array.isArray(shares) || shares.length > 0) {
+      fail(`${label} é de uma área individual e não pode ter divisão entre pessoas.`)
+    }
+    const bill: Bill = { id, name: name.trim(), month, totalCents, dueDay, shares: [], paid }
+    if (isExample) bill.isExample = true
+    return bill
   }
 
   if (!Array.isArray(shares) || shares.length === 0) {
@@ -296,6 +307,7 @@ function validateMembersAndBills(
   members: unknown[],
   bills: unknown[],
   billIds: Set<string>,
+  individual = false,
 ): { members: Member[]; bills: Bill[] } {
   if (members.length > MAX_MEMBERS) fail('Há integrantes demais.')
   const memberIds = new Set<string>()
@@ -303,7 +315,7 @@ function validateMembersAndBills(
     validateMember(member, index + 1, memberIds),
   )
   const cleanBills = bills.map((bill, index) =>
-    validateBill(bill, index + 1, memberIds, billIds),
+    validateBill(bill, index + 1, memberIds, billIds, individual),
   )
   return { members: cleanMembers, bills: cleanBills }
 }
@@ -347,7 +359,7 @@ function validateArea(
   }
 
   try {
-    const content = validateMembersAndBills(members, bills, billIds)
+    const content = validateMembersAndBills(members, bills, billIds, type === 'individual')
     return { id, name: cleanName, type, ...content }
   } catch (error) {
     if (error instanceof BackupValidationError) fail(`Na área “${cleanName}”: ${error.message}`)

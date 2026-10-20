@@ -132,42 +132,54 @@ export function useFinanceStore() {
     saveData(data)
   }, [data, initial])
 
-  /** Aplica uma alteração somente na área "Gastos da casa"; as outras áreas não mudam. */
-  function updateHome(change: (home: Area) => Area) {
+  /** Aplica uma alteração somente na área indicada; as outras áreas não mudam. */
+  function updateArea(areaId: string, change: (area: Area) => Area) {
     setData((current) => ({
       ...current,
-      areas: current.areas.map((area) => (area.id === HOME_AREA_ID ? change(area) : area)),
+      areas: current.areas.map((area) => (area.id === areaId ? change(area) : area)),
     }))
   }
 
-  function addBill(input: BillInput) {
-    updateHome((home) => ({ ...home, bills: [...home.bills, { ...input, id: createId() }] }))
+  function updateHome(change: (home: Area) => Area) {
+    updateArea(HOME_AREA_ID, change)
   }
 
-  function updateBill(id: string, input: BillInput) {
-    updateHome((home) => ({
-      ...home,
-      bills: home.bills.map((bill) =>
+  /** Contas de áreas individuais nunca têm divisão entre pessoas. */
+  function sharesFor(area: Area, input: BillInput) {
+    return area.type === 'individual' ? [] : input.shares
+  }
+
+  function addBill(areaId: string, input: BillInput) {
+    updateArea(areaId, (area) => ({
+      ...area,
+      bills: [...area.bills, { ...input, shares: sharesFor(area, input), id: createId() }],
+    }))
+  }
+
+  function updateBill(areaId: string, id: string, input: BillInput) {
+    updateArea(areaId, (area) => ({
+      ...area,
+      bills: area.bills.map((bill) =>
         // Depois de editada, a conta deixa de ser considerada exemplo.
-        bill.id === id ? { ...input, id, isExample: false } : bill,
+        bill.id === id ? { ...input, shares: sharesFor(area, input), id, isExample: false } : bill,
       ),
     }))
   }
 
-  function deleteBill(id: string) {
-    updateHome((home) => ({ ...home, bills: home.bills.filter((bill) => bill.id !== id) }))
+  function deleteBill(areaId: string, id: string) {
+    updateArea(areaId, (area) => ({ ...area, bills: area.bills.filter((bill) => bill.id !== id) }))
   }
 
-  function togglePaid(id: string) {
-    updateHome((home) => ({
-      ...home,
-      bills: home.bills.map((bill) => (bill.id === id ? { ...bill, paid: !bill.paid } : bill)),
+  function togglePaid(areaId: string, id: string) {
+    updateArea(areaId, (area) => ({
+      ...area,
+      bills: area.bills.map((bill) => (bill.id === id ? { ...bill, paid: !bill.paid } : bill)),
     }))
   }
 
-  function copyBills(fromMonth: MonthKey, toMonth: MonthKey) {
-    updateHome((home) => {
-      const copies = home.bills
+  function copyBills(areaId: string, fromMonth: MonthKey, toMonth: MonthKey) {
+    updateArea(areaId, (area) => {
+      const copies = area.bills
         .filter((bill) => bill.month === fromMonth)
         .map((bill) => ({
           ...bill,
@@ -175,7 +187,7 @@ export function useFinanceStore() {
           month: toMonth,
           paid: false,
         }))
-      return { ...home, bills: [...home.bills, ...copies] }
+      return { ...area, bills: [...area.bills, ...copies] }
     })
   }
 
