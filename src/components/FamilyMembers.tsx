@@ -25,7 +25,7 @@ export function FamilyMembers({ members, bills, onRename }: FamilyMembersProps) 
     <section className="section" aria-labelledby="family-title">
       <div className="section__header">
         <h2 id="family-title" className="section__title">
-          A família
+          Membros
         </h2>
         <p className="section__hint">Quanto cabe a cada um neste mês</p>
       </div>
