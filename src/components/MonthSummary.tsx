@@ -1,4 +1,5 @@
 import type { Bill } from '../types'
+import { getBillsTotals } from '../utils/billTotals'
 import { formatBRL } from '../utils/money'
 import { OverdueBills } from './OverdueBills'
 
@@ -10,12 +11,12 @@ interface MonthSummaryProps {
 }
 
 export function MonthSummary({ bills, overdueBills, onMarkPaid }: MonthSummaryProps) {
-  const total = bills.reduce((sum, bill) => sum + bill.totalCents, 0)
-  const paid = bills
-    .filter((bill) => bill.paid)
-    .reduce((sum, bill) => sum + bill.totalCents, 0)
-  const pending = total - paid
-  const paidCount = bills.filter((bill) => bill.paid).length
+  const {
+    totalCents: total,
+    paidCents: paid,
+    pendingCents: pending,
+    paidCount,
+  } = getBillsTotals(bills)
   // Arredonda para baixo: só chega a 100% quando não falta nada a pagar.
   const progress = total > 0 ? Math.floor((paid * 100) / total) : 0
 

@@ -401,6 +401,112 @@
   border-radius: 50%;
 }
 
+/* ---------- Área recolhível (Família) ---------- */
+
+.area {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.area__heading {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.area__toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  width: 100%;
+  padding: 16px 18px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.area__toggle:hover {
+  background: var(--surface-hover);
+}
+
+.area__toggle:focus-visible {
+  outline-offset: -3px;
+}
+
+.area__identity {
+  display: flex;
+  flex: 1 1 160px;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.area__name {
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+
+.area__meta {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.area__overdue {
+  align-self: flex-start;
+  margin-top: 4px;
+  white-space: normal;
+}
+
+.area__figures {
+  display: flex;
+  gap: 24px;
+}
+
+.area__figure {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.area__figure-label {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+}
+
+.area__figure-value {
+  font-size: 1.1rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.area__chevron {
+  flex-shrink: 0;
+  color: var(--text-soft);
+  transform: rotate(-90deg);
+  transition: transform 0.2s;
+}
+
+.area__toggle[aria-expanded='true'] .area__chevron {
+  transform: rotate(0deg);
+}
+
+.area__content {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 18px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.area__content[hidden] {
+  display: none;
+}
+
 /* ---------- Aviso de exemplos ---------- */
 
 .notice {
@@ -1341,6 +1447,28 @@ select.input option {
       'areas'
       'distribution';
     padding: 16px;
+  }
+
+  .area__toggle {
+    padding: 14px 16px;
+  }
+
+  .area__chevron {
+    order: 2;
+  }
+
+  .area__figures {
+    order: 3;
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .area__figure:first-child {
+    align-items: flex-start;
+  }
+
+  .area__content {
+    padding: 14px 12px;
   }
 
   .personal-panel__totals {

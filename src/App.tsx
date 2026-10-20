@@ -5,6 +5,7 @@ import { BackupDialog } from './components/BackupDialog'
 import { BillFormDialog } from './components/BillFormDialog'
 import { BillList } from './components/BillList'
 import { ConfirmDialog } from './components/ConfirmDialog'
+import { FamilyArea } from './components/FamilyArea'
 import { FamilyMembers } from './components/FamilyMembers'
 import { MonthSummary } from './components/MonthSummary'
 import { PersonalPanel } from './components/PersonalPanel'
@@ -85,31 +86,37 @@ function App() {
           </div>
         )}
 
-        <MonthSummary
+        <FamilyArea
+          memberCount={store.members.length}
           bills={monthBills}
-          overdueBills={overdueBills}
-          onMarkPaid={(bill) => store.togglePaid(bill.id)}
-        />
+          overdueCount={overdueBills.length}
+        >
+          <MonthSummary
+            bills={monthBills}
+            overdueBills={overdueBills}
+            onMarkPaid={(bill) => store.togglePaid(bill.id)}
+          />
 
-        <FamilyMembers
-          members={store.members}
-          bills={monthBills}
-          onRename={setMemberToRename}
-        />
+          <FamilyMembers
+            members={store.members}
+            bills={monthBills}
+            onRename={setMemberToRename}
+          />
 
-        <BillList
-          bills={monthBills}
-          members={store.members}
-          today={today}
-          monthName={formatMonthName(month)}
-          previousMonthName={formatMonthName(previousMonth)}
-          canCopyPreviousMonth={previousMonthHasBills}
-          onAdd={() => setBillForm({ mode: 'new' })}
-          onCopyPreviousMonth={() => store.copyBills(previousMonth, month)}
-          onTogglePaid={(bill) => store.togglePaid(bill.id)}
-          onEdit={(bill) => setBillForm({ mode: 'edit', bill })}
-          onDelete={setBillToDelete}
-        />
+          <BillList
+            bills={monthBills}
+            members={store.members}
+            today={today}
+            monthName={formatMonthName(month)}
+            previousMonthName={formatMonthName(previousMonth)}
+            canCopyPreviousMonth={previousMonthHasBills}
+            onAdd={() => setBillForm({ mode: 'new' })}
+            onCopyPreviousMonth={() => store.copyBills(previousMonth, month)}
+            onTogglePaid={(bill) => store.togglePaid(bill.id)}
+            onEdit={(bill) => setBillForm({ mode: 'edit', bill })}
+            onDelete={setBillToDelete}
+          />
+        </FamilyArea>
       </main>
 
       <footer className="app__footer">
