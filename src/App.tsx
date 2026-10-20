@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import { AppHeader } from './components/AppHeader'
+import { BackupDialog } from './components/BackupDialog'
 import { BillFormDialog } from './components/BillFormDialog'
 import { BillList } from './components/BillList'
 import { ConfirmDialog } from './components/ConfirmDialog'
@@ -21,6 +22,7 @@ function App() {
   const [billToDelete, setBillToDelete] = useState<Bill | null>(null)
   const [memberToRename, setMemberToRename] = useState<Member | null>(null)
   const [confirmClearExamples, setConfirmClearExamples] = useState(false)
+  const [showBackup, setShowBackup] = useState(false)
 
   const monthBills = store.bills.filter((bill) => bill.month === month)
   const previousMonth = addMonths(month, -1)
@@ -82,8 +84,23 @@ function App() {
       </main>
 
       <footer className="app__footer">
-        Seus dados ficam salvos apenas neste navegador, neste aparelho.
+        <p>Seus dados ficam salvos apenas neste navegador, neste aparelho.</p>
+        <button
+          type="button"
+          className="button button--small button--ghost"
+          onClick={() => setShowBackup(true)}
+        >
+          Backup dos dados
+        </button>
       </footer>
+
+      {showBackup && (
+        <BackupDialog
+          data={store.data}
+          onRestore={store.replaceAllData}
+          onClose={() => setShowBackup(false)}
+        />
+      )}
 
       {billForm && (
         <BillFormDialog

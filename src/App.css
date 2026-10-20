@@ -16,6 +16,10 @@
 
 .app__footer {
   margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   text-align: center;
   color: var(--text-soft);
   font-size: 0.9rem;
@@ -934,6 +938,113 @@ select.input option {
   accent-color: var(--accent);
 }
 
+/* ---------- Backup ---------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.file-button {
+  cursor: pointer;
+}
+
+.file-button:has(+ input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.backup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+
+.backup-section__title {
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.backup-section__text {
+  color: var(--text-soft);
+  font-size: 0.95rem;
+}
+
+.backup-message {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.backup-message--ok {
+  display: block;
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.backup-message--error {
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.backup-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.backup-confirm__title {
+  font-weight: 650;
+  font-size: 1.05rem;
+}
+
+.backup-confirm__details {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-soft);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.backup-confirm__details strong {
+  color: var(--text);
+}
+
+.backup-confirm__warning {
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.backup-confirm__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 /* ---------- Responsivo ---------- */
 
 @media (max-width: 860px) {
@@ -1011,5 +1122,9 @@ select.input option {
 
   .modal__footer .button {
     flex: 1;
+  }
+
+  .backup-confirm__actions .button {
+    flex: 1 1 100%;
   }
 }

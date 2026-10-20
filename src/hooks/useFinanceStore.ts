@@ -110,7 +110,13 @@ export function useFinanceStore() {
     }))
   }
 
+  /** Substitui todos os dados de uma vez (usado ao restaurar um backup já validado). */
+  function replaceAllData(next: FinanceData) {
+    setData(next)
+  }
+
   return {
+    data,
     members: data.members,
     bills: data.bills,
     addBill,
@@ -120,5 +126,6 @@ export function useFinanceStore() {
     copyBills,
     deleteExamples,
     renameMember,
+    replaceAllData,
   }
 }
