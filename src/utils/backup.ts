@@ -8,12 +8,12 @@ export const BACKUP_FORMAT_VERSION = 1
 
 /** Limites para recusar arquivos absurdos antes de processá-los. */
 export const MAX_BACKUP_FILE_BYTES = 5 * 1024 * 1024
-const MAX_MEMBERS = 20
+export const MAX_MEMBERS = 20
 const MAX_BILLS = 20000
 const MAX_SHARES_PER_BILL = MAX_MEMBERS
 const MAX_ID_LENGTH = 100
 /** Mesmos limites usados nos formulários do aplicativo. */
-const MAX_MEMBER_NAME_LENGTH = 20
+export const MAX_MEMBER_NAME_LENGTH = 20
 const MAX_BILL_NAME_LENGTH = 40
 const MAX_EMOJI_LENGTH = 16
 

@@ -1,5 +1,4 @@
 import { useId } from 'react'
-import { useCurrentMember } from '../hooks/useCurrentMember'
 import type { Bill, Member } from '../types'
 import { formatBRL } from '../utils/money'
 import { getMemberShareTotals } from '../utils/personal'
@@ -10,6 +9,9 @@ interface PersonalPanelProps {
   bills: Bill[]
   members: Member[]
   monthName: string
+  /** Integrante atual (useCurrentMember), ou null quando ainda não foi escolhido. */
+  member: Member | null
+  onChooseMember: (id: string) => void
 }
 
 interface PersonalArea {
@@ -20,8 +22,13 @@ interface PersonalArea {
 }
 
 /** Cartão com a parte do integrante atual nas contas do mês. Somente leitura. */
-export function PersonalPanel({ bills, members, monthName }: PersonalPanelProps) {
-  const { member, chooseMember } = useCurrentMember(members)
+export function PersonalPanel({
+  bills,
+  members,
+  monthName,
+  member,
+  onChooseMember,
+}: PersonalPanelProps) {
   const titleId = useId()
   const selectId = useId()
 
@@ -44,7 +51,7 @@ export function PersonalPanel({ bills, members, monthName }: PersonalPanelProps)
             className="input"
             defaultValue=""
             onChange={(event) => {
-              if (event.target.value) chooseMember(event.target.value)
+              if (event.target.value) onChooseMember(event.target.value)
             }}
           >
             <option value="" disabled>

@@ -5,7 +5,12 @@ import { Avatar } from './Avatar'
 interface FamilyMembersProps {
   members: Member[]
   bills: Bill[]
-  onRename: (member: Member) => void
+  /** Mensagem da última ação (adicionar, editar ou excluir). */
+  feedback: string | null
+  canAdd: boolean
+  onAdd: () => void
+  onEdit: (member: Member) => void
+  onDelete: (member: Member) => void
 }
 
 function getMemberTotals(memberId: string, bills: Bill[]) {
@@ -20,15 +25,41 @@ function getMemberTotals(memberId: string, bills: Bill[]) {
   return { total, pending }
 }
 
-export function FamilyMembers({ members, bills, onRename }: FamilyMembersProps) {
+export function FamilyMembers({
+  members,
+  bills,
+  feedback,
+  canAdd,
+  onAdd,
+  onEdit,
+  onDelete,
+}: FamilyMembersProps) {
   return (
     <section className="section" aria-labelledby="family-title">
-      <div className="section__header">
-        <h2 id="family-title" className="section__title">
-          Membros
-        </h2>
-        <p className="section__hint">Quanto cabe a cada um neste mês</p>
+      <div className="section__header section__header--with-action">
+        <div>
+          <h2 id="family-title" className="section__title">
+            Membros
+          </h2>
+          <p className="section__hint">
+            {canAdd
+              ? 'Quanto cabe a cada um neste mês'
+              : `Limite de ${members.length} membros atingido`}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="button button--ghost add-button"
+          onClick={onAdd}
+          disabled={!canAdd}
+        >
+          ＋ Adicionar membro
+        </button>
       </div>
+
+      <p className="members__feedback" role="status">
+        {feedback && <span className="backup-message backup-message--ok">{feedback}</span>}
+      </p>
 
       <ul className="members">
         {members.map((member) => {
@@ -51,14 +82,24 @@ export function FamilyMembers({ members, bills, onRename }: FamilyMembersProps) 
                   )}
                 </>
               )}
-              <button
-                type="button"
-                className="link-button"
-                onClick={() => onRename(member)}
-                aria-label={`Mudar o nome de ${member.name}`}
-              >
-                Mudar nome
-              </button>
+              <div className="member-card__actions">
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => onEdit(member)}
+                  aria-label={`Editar o nome de ${member.name}`}
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  className="link-button link-button--danger"
+                  onClick={() => onDelete(member)}
+                  aria-label={`Excluir ${member.name}`}
+                >
+                  Excluir
+                </button>
+              </div>
             </li>
           )
         })}

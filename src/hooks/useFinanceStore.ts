@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_MEMBERS, createInitialData } from '../data/sampleData'
-import type { Bill, FinanceData, MonthKey } from '../types'
+import type { Bill, FinanceData, Member, MonthKey } from '../types'
 import { parseStoredData } from '../utils/backup'
 import { getToday } from '../utils/dates'
 import { createId } from '../utils/ids'
@@ -189,6 +189,21 @@ export function useFinanceStore() {
     }))
   }
 
+  function addMember(member: Member) {
+    setData((current) => ({ ...current, members: [...current.members, member] }))
+  }
+
+  /** Exclui um membro somente se ele não participa de nenhuma conta e não é o último. */
+  function deleteMember(id: string) {
+    setData((current) => {
+      const hasShares = current.bills.some((bill) =>
+        bill.shares.some((share) => share.memberId === id),
+      )
+      if (hasShares || current.members.length <= 1) return current
+      return { ...current, members: current.members.filter((member) => member.id !== id) }
+    })
+  }
+
   /** Substitui todos os dados de uma vez (usado ao restaurar um backup já validado). */
   function replaceAllData(next: FinanceData) {
     setData(next)
@@ -206,6 +221,8 @@ export function useFinanceStore() {
     copyBills,
     deleteExamples,
     renameMember,
+    addMember,
+    deleteMember,
     replaceAllData,
   }
 }

@@ -741,6 +741,42 @@
   font-variant-numeric: tabular-nums;
 }
 
+.member-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 12px;
+}
+
+.link-button--danger {
+  color: var(--danger);
+}
+
+.link-button--danger:hover {
+  color: var(--danger);
+  filter: brightness(1.15);
+}
+
+.members__feedback {
+  margin: 0 0 12px;
+}
+
+.members__feedback:empty {
+  margin: 0;
+}
+
+.blockers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 12px 12px 30px;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  color: var(--text);
+}
+
 .member-card__muted {
   color: var(--text-soft);
   font-size: 0.85rem;

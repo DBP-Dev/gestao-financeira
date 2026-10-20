@@ -9,14 +9,18 @@ import { FamilyArea } from './components/FamilyArea'
 import { FamilyMembers } from './components/FamilyMembers'
 import { MonthSummary } from './components/MonthSummary'
 import { PersonalPanel } from './components/PersonalPanel'
-import { RenameMemberDialog } from './components/RenameMemberDialog'
+import { DeleteMemberDialog } from './components/DeleteMemberDialog'
+import { MemberFormDialog } from './components/MemberFormDialog'
 import { StorageWarning } from './components/StorageWarning'
+import { useCurrentMember } from './hooks/useCurrentMember'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
 import { useToday } from './hooks/useToday'
 import type { Bill, Member } from './types'
 import { addMonths, effectiveDueDay, formatMonthName, getBillStatus } from './utils/dates'
+import { MAX_MEMBERS, createMember, getMemberDeletionBlockers } from './utils/members'
 
 type BillFormState = { mode: 'new' } | { mode: 'edit'; bill: Bill } | null
+type MemberFormState = { mode: 'new' } | { mode: 'edit'; member: Member } | null
 
 function App() {
   const store = useFinanceStore()
@@ -31,7 +35,10 @@ function App() {
   }
   const [billForm, setBillForm] = useState<BillFormState>(null)
   const [billToDelete, setBillToDelete] = useState<Bill | null>(null)
-  const [memberToRename, setMemberToRename] = useState<Member | null>(null)
+  const [memberForm, setMemberForm] = useState<MemberFormState>(null)
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null)
+  const [memberFeedback, setMemberFeedback] = useState<string | null>(null)
+  const currentMember = useCurrentMember(store.members)
   const [confirmClearExamples, setConfirmClearExamples] = useState(false)
   const [showBackup, setShowBackup] = useState(false)
 
@@ -46,6 +53,17 @@ function App() {
   const previousMonth = addMonths(month, -1)
   const previousMonthHasBills = store.bills.some((bill) => bill.month === previousMonth)
   const hasExamples = store.bills.some((bill) => bill.isExample)
+
+  function handleSaveMember(name: string) {
+    if (memberForm?.mode === 'edit') {
+      store.renameMember(memberForm.member.id, name)
+      setMemberFeedback(`✓ Nome alterado para “${name}”.`)
+    } else {
+      store.addMember(createMember(name))
+      setMemberFeedback(`✓ ${name} foi adicionado(a) à família.`)
+    }
+    setMemberForm(null)
+  }
 
   function handleSaveBill(input: BillInput) {
     if (billForm?.mode === 'edit') {
@@ -67,6 +85,8 @@ function App() {
           bills={monthBills}
           members={store.members}
           monthName={formatMonthName(month)}
+          member={currentMember.member}
+          onChooseMember={currentMember.chooseMember}
         />
 
         {hasExamples && (
@@ -100,7 +120,11 @@ function App() {
           <FamilyMembers
             members={store.members}
             bills={monthBills}
-            onRename={setMemberToRename}
+            feedback={memberFeedback}
+            canAdd={store.members.length < MAX_MEMBERS}
+            onAdd={() => setMemberForm({ mode: 'new' })}
+            onEdit={(member) => setMemberForm({ mode: 'edit', member })}
+            onDelete={setMemberToDelete}
           />
 
           <BillList
@@ -133,7 +157,10 @@ function App() {
       {showBackup && (
         <BackupDialog
           data={store.data}
-          onRestore={store.replaceAllData}
+          onRestore={(restored) => {
+            store.replaceAllData(restored)
+            setMemberFeedback(null)
+          }}
           onClose={() => setShowBackup(false)}
         />
       )}
@@ -179,14 +206,30 @@ function App() {
         />
       )}
 
-      {memberToRename && (
-        <RenameMemberDialog
-          member={memberToRename}
-          onSave={(name) => {
-            store.renameMember(memberToRename.id, name)
-            setMemberToRename(null)
+      {memberForm && (
+        <MemberFormDialog
+          member={memberForm.mode === 'edit' ? memberForm.member : undefined}
+          members={store.members}
+          onSave={handleSaveMember}
+          onCancel={() => setMemberForm(null)}
+        />
+      )}
+
+      {memberToDelete && (
+        <DeleteMemberDialog
+          member={memberToDelete}
+          blockers={getMemberDeletionBlockers(
+            memberToDelete,
+            store.members,
+            store.bills,
+            currentMember.member?.id ?? null,
+          )}
+          onConfirm={() => {
+            store.deleteMember(memberToDelete.id)
+            setMemberFeedback(`✓ ${memberToDelete.name} foi excluído(a) da família.`)
+            setMemberToDelete(null)
           }}
-          onCancel={() => setMemberToRename(null)}
+          onCancel={() => setMemberToDelete(null)}
         />
       )}
     </div>
