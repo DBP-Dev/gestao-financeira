@@ -267,6 +267,28 @@
   flex: 1 1 280px;
 }
 
+.notice--danger {
+  border-color: var(--danger-border);
+  border-left-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.notice--danger strong {
+  color: var(--danger);
+}
+
+.notice__content {
+  display: flex;
+  flex: 1 1 280px;
+  flex-direction: column;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+
+.notice__content p {
+  flex: none;
+}
+
 /* ---------- Resumo ---------- */
 
 .summary {

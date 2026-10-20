@@ -8,6 +8,7 @@ import { ConfirmDialog } from './components/ConfirmDialog'
 import { FamilyMembers } from './components/FamilyMembers'
 import { MonthSummary } from './components/MonthSummary'
 import { RenameMemberDialog } from './components/RenameMemberDialog'
+import { StorageWarning } from './components/StorageWarning'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
 import { useToday } from './hooks/useToday'
 import type { Bill, Member } from './types'
@@ -58,6 +59,8 @@ function App() {
       <AppHeader month={month} currentMonth={today.month} onChangeMonth={setMonth} />
 
       <main className="app__content">
+        {store.storageIssue && <StorageWarning issue={store.storageIssue} />}
+
         {hasExamples && (
           <div className="notice" role="note">
             <p>

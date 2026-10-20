@@ -1,32 +1,106 @@
 import { useEffect, useState } from 'react'
-import { createInitialData } from '../data/sampleData'
+import { DEFAULT_MEMBERS, createInitialData } from '../data/sampleData'
 import type { Bill, FinanceData, MonthKey } from '../types'
+import { parseStoredData } from '../utils/backup'
 import { getToday } from '../utils/dates'
 import { createId } from '../utils/ids'
 
 const STORAGE_KEY = 'gestao-financeira:dados:v1'
+/** Cópias exatas de dados que não puderam ser lidos. Nunca são sobrescritas. */
+const RECOVERY_KEY_PREFIX = `${STORAGE_KEY}:recuperacao:`
 
-function isFinanceData(value: unknown): value is FinanceData {
-  if (typeof value !== 'object' || value === null) return false
-  const data = value as Partial<FinanceData>
-  return (
-    data.version === 1 &&
-    Array.isArray(data.members) &&
-    Array.isArray(data.bills)
-  )
+/** Problema encontrado ao abrir os dados salvos (null quando está tudo certo). */
+export type StorageIssue =
+  /** Dados ilegíveis, mas uma cópia exata foi guardada e conferida. */
+  | { kind: 'recovered'; reason: string; recoveryKey: string; original: string }
+  /** Dados ilegíveis e não foi possível guardar a cópia: nada será gravado. */
+  | { kind: 'not-preserved'; reason: string; original: string }
+  /** O navegador não deixou ler o armazenamento: nada será gravado. */
+  | { kind: 'unavailable' }
+
+interface InitialLoad {
+  data: FinanceData
+  /** Se é permitido gravar na chave principal. */
+  canSave: boolean
+  /** Primeiro uso: os exemplos devem ser gravados logo de início. */
+  saveOnStart: boolean
+  issue: StorageIssue | null
 }
 
-function loadData(): FinanceData {
+function createEmptyData(): FinanceData {
+  return { version: 1, members: DEFAULT_MEMBERS, bills: [] }
+}
+
+/**
+ * Guarda uma cópia exata do texto original em uma chave de recuperação.
+ * Reaproveita uma cópia idêntica já existente (recarregamentos e StrictMode) e
+ * nunca sobrescreve outra cópia. Devolve a chave somente se a gravação foi conferida.
+ */
+function preserveOriginal(original: string): string | null {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
-      const parsed: unknown = JSON.parse(saved)
-      if (isFinanceData(parsed)) return parsed
+    for (let index = 0; index < localStorage.length; index++) {
+      const key = localStorage.key(index)
+      if (key?.startsWith(RECOVERY_KEY_PREFIX) && localStorage.getItem(key) === original) {
+        return key
+      }
     }
+
+    const baseKey = RECOVERY_KEY_PREFIX + new Date().toISOString()
+    let key = baseKey
+    for (let suffix = 2; localStorage.getItem(key) !== null; suffix++) {
+      key = `${baseKey}-${suffix}`
+    }
+    localStorage.setItem(key, original)
+    return localStorage.getItem(key) === original ? key : null
   } catch {
-    // Dados corrompidos ou armazenamento bloqueado: começa com os exemplos.
+    return null
   }
-  return createInitialData(getToday().month)
+}
+
+function loadInitial(): InitialLoad {
+  let saved: string | null
+  try {
+    saved = localStorage.getItem(STORAGE_KEY)
+  } catch {
+    return {
+      data: createEmptyData(),
+      canSave: false,
+      saveOnStart: false,
+      issue: { kind: 'unavailable' },
+    }
+  }
+
+  // Chave inexistente: primeiro uso, começa com os exemplos.
+  if (saved === null) {
+    return {
+      data: createInitialData(getToday().month),
+      canSave: true,
+      saveOnStart: true,
+      issue: null,
+    }
+  }
+
+  const result = parseStoredData(saved)
+  if (result.ok) {
+    return { data: result.data, canSave: true, saveOnStart: false, issue: null }
+  }
+
+  // Chave existente com conteúdo inválido: só libera gravações depois de preservar o original.
+  const recoveryKey = preserveOriginal(saved)
+  if (recoveryKey) {
+    return {
+      data: createEmptyData(),
+      canSave: true,
+      saveOnStart: false,
+      issue: { kind: 'recovered', reason: result.error, recoveryKey, original: saved },
+    }
+  }
+  return {
+    data: createEmptyData(),
+    canSave: false,
+    saveOnStart: false,
+    issue: { kind: 'not-preserved', reason: result.error, original: saved },
+  }
 }
 
 function saveData(data: FinanceData) {
@@ -41,11 +115,16 @@ export type BillInput = Omit<Bill, 'id' | 'isExample'>
 
 /** Guarda integrantes e contas, salvando tudo no navegador automaticamente. */
 export function useFinanceStore() {
-  const [data, setData] = useState<FinanceData>(loadData)
+  const [initial] = useState(loadInitial)
+  const [data, setData] = useState<FinanceData>(initial.data)
 
   useEffect(() => {
+    if (!initial.canSave) return
+    // O estado inicial só é gravado no primeiro uso; nos outros casos, a chave
+    // original só muda depois de uma alteração feita pela pessoa.
+    if (data === initial.data && !initial.saveOnStart) return
     saveData(data)
-  }, [data])
+  }, [data, initial])
 
   function addBill(input: BillInput) {
     setData((current) => ({
@@ -117,6 +196,7 @@ export function useFinanceStore() {
 
   return {
     data,
+    storageIssue: initial.issue,
     members: data.members,
     bills: data.bills,
     addBill,

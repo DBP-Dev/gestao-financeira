@@ -52,16 +52,25 @@ export function createBackup(data: FinanceData, now: Date): BackupFile {
 }
 
 /** "contas-da-familia-backup-2026-10-20-1430.json" */
-export function createBackupFileName(now: Date): string {
+export function createBackupFileName(
+  now: Date,
+  prefix = 'contas-da-familia-backup',
+  extension = 'json',
+): string {
   const pad = (value: number) => String(value).padStart(2, '0')
   const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
   const time = `${pad(now.getHours())}${pad(now.getMinutes())}`
-  return `contas-da-familia-backup-${date}-${time}.json`
+  return `${prefix}-${date}-${time}.${extension}`
 }
 
 /** Faz o navegador baixar o backup como arquivo .json. */
 export function downloadBackup(backup: BackupFile, fileName: string) {
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+  downloadTextFile(JSON.stringify(backup, null, 2), fileName, 'application/json')
+}
+
+/** Faz o navegador baixar um texto qualquer como arquivo, sem alterá-lo. */
+export function downloadTextFile(text: string, fileName: string, type = 'text/plain') {
+  const blob = new Blob([text], { type })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -243,14 +252,27 @@ function validateBackup(raw: unknown): { data: FinanceData; summary: BackupSumma
   }
 
   if (!isPlainObject(data)) fail('O backup está sem os dados do aplicativo.')
-  const { members, bills } = data
+  const cleanData = validateFinanceContent(data.members, data.bills)
 
-  if (!Array.isArray(members) || members.length === 0) {
-    fail('O backup não tem nenhum integrante da família.')
+  return {
+    data: cleanData,
+    summary: {
+      createdAt: createdAtDate,
+      memberCount: cleanData.members.length,
+      billCount: cleanData.bills.length,
+      monthCount: new Set(cleanData.bills.map((bill) => bill.month)).size,
+    },
   }
-  if (members.length > MAX_MEMBERS) fail('O backup tem integrantes demais.')
-  if (!Array.isArray(bills)) fail('O backup está sem a lista de contas.')
-  if (bills.length > MAX_BILLS) fail('O backup tem contas demais.')
+}
+
+/** Regras comuns ao backup e aos dados salvos no navegador. */
+function validateFinanceContent(members: unknown, bills: unknown): FinanceData {
+  if (!Array.isArray(members) || members.length === 0) {
+    fail('Nenhum integrante da família foi encontrado.')
+  }
+  if (members.length > MAX_MEMBERS) fail('Há integrantes demais.')
+  if (!Array.isArray(bills)) fail('A lista de contas não foi encontrada.')
+  if (bills.length > MAX_BILLS) fail('Há contas demais.')
 
   const memberIds = new Set<string>()
   const cleanMembers = members.map((member, index) =>
@@ -262,14 +284,30 @@ function validateBackup(raw: unknown): { data: FinanceData; summary: BackupSumma
     validateBill(bill, index + 1, memberIds, billIds),
   )
 
-  return {
-    data: { version: 1, members: cleanMembers, bills: cleanBills },
-    summary: {
-      createdAt: createdAtDate,
-      memberCount: cleanMembers.length,
-      billCount: cleanBills.length,
-      monthCount: new Set(cleanBills.map((bill) => bill.month)).size,
-    },
+  return { version: 1, members: cleanMembers, bills: cleanBills }
+}
+
+export type StoredDataParseResult =
+  | { ok: true; data: FinanceData }
+  | { ok: false; error: string }
+
+/** Lê e valida os dados salvos no navegador com as mesmas regras do backup. */
+export function parseStoredData(text: string): StoredDataParseResult {
+  let raw: unknown
+  try {
+    raw = JSON.parse(text)
+  } catch {
+    return { ok: false, error: 'O conteúdo salvo não está em formato JSON válido.' }
+  }
+
+  try {
+    if (!isPlainObject(raw) || raw.version !== 1) {
+      fail('Os dados salvos estão em um formato ou versão que este aplicativo não reconhece.')
+    }
+    return { ok: true, data: validateFinanceContent(raw.members, raw.bills) }
+  } catch (error) {
+    if (error instanceof BackupValidationError) return { ok: false, error: error.message }
+    return { ok: false, error: 'Os dados salvos estão com problemas e não podem ser usados.' }
   }
 }
 
