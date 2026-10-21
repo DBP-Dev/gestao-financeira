@@ -190,13 +190,21 @@ function App() {
 
   /** Área criada pela pessoa: totais, pendências e atrasadas calculados só com as contas dela. */
   function renderAreaCard(area: Area) {
+    const areaMonthBills = area.bills.filter((bill) => bill.month === month)
+    const areaOverdueBills = getOverdueBills(area.bills)
     return (
       <AreaCard
         key={area.id}
         area={area}
-        monthBills={area.bills.filter((bill) => bill.month === month)}
-        overdueCount={getOverdueBills(area.bills).length}
+        monthBills={areaMonthBills}
+        overdueCount={areaOverdueBills.length}
       >
+        <MonthSummary
+          bills={areaMonthBills}
+          overdueBills={areaOverdueBills}
+          onMarkPaid={(bill) => store.togglePaid(area.id, bill.id)}
+          areaName={area.name}
+        />
         {renderAreaBills(area)}
       </AreaCard>
     )

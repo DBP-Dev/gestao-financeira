@@ -8,9 +8,11 @@ interface MonthSummaryProps {
   /** Contas atrasadas de meses anteriores (não entram nos totais do mês). */
   overdueBills: Bill[]
   onMarkPaid: (bill: Bill) => void
+  /** Nome da área, incluído só nos rótulos acessíveis. Sem ele, os rótulos ficam como antes. */
+  areaName?: string
 }
 
-export function MonthSummary({ bills, overdueBills, onMarkPaid }: MonthSummaryProps) {
+export function MonthSummary({ bills, overdueBills, onMarkPaid, areaName }: MonthSummaryProps) {
   const {
     totalCents: total,
     paidCents: paid,
@@ -19,9 +21,10 @@ export function MonthSummary({ bills, overdueBills, onMarkPaid }: MonthSummaryPr
   } = getBillsTotals(bills)
   // Arredonda para baixo: só chega a 100% quando não falta nada a pagar.
   const progress = total > 0 ? Math.floor((paid * 100) / total) : 0
+  const labelSuffix = areaName ? ` — ${areaName}` : ''
 
   return (
-    <section className="summary" aria-label="Resumo do mês">
+    <section className="summary" aria-label={`Resumo do mês${labelSuffix}`}>
       <div className="summary__grid">
         <div className="summary__item">
           <span className="summary__label">Total das contas</span>
@@ -44,7 +47,7 @@ export function MonthSummary({ bills, overdueBills, onMarkPaid }: MonthSummaryPr
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={progress}
-            aria-label="Parte do mês já paga"
+            aria-label={`Parte do mês já paga${labelSuffix}`}
           >
             <div className="progress__bar" style={{ width: `${progress}%` }} />
           </div>
@@ -54,7 +57,7 @@ export function MonthSummary({ bills, overdueBills, onMarkPaid }: MonthSummaryPr
           </span>
         </div>
       )}
-      <OverdueBills bills={overdueBills} onMarkPaid={onMarkPaid} />
+      <OverdueBills bills={overdueBills} onMarkPaid={onMarkPaid} areaName={areaName} />
     </section>
   )
 }

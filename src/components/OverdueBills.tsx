@@ -7,16 +7,23 @@ interface OverdueBillsProps {
   /** Contas de meses anteriores, não pagas e já vencidas. */
   bills: Bill[]
   onMarkPaid: (bill: Bill) => void
+  /** Nome da área, incluído só no rótulo acessível. Sem ele, o rótulo vem do título visível. */
+  areaName?: string
 }
 
-export function OverdueBills({ bills, onMarkPaid }: OverdueBillsProps) {
+export function OverdueBills({ bills, onMarkPaid, areaName }: OverdueBillsProps) {
   const titleId = useId()
   if (bills.length === 0) return null
 
   const total = bills.reduce((sum, bill) => sum + bill.totalCents, 0)
 
   return (
-    <div className="overdue" role="region" aria-labelledby={titleId}>
+    <div
+      className="overdue"
+      role="region"
+      aria-labelledby={areaName ? undefined : titleId}
+      aria-label={areaName ? `Contas atrasadas de meses anteriores — ${areaName}` : undefined}
+    >
       <div className="overdue__header">
         <h4 id={titleId} className="overdue__title">
           ! Contas atrasadas de meses anteriores
