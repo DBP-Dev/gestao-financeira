@@ -32,7 +32,11 @@ type BillFormState =
   | { mode: 'new'; areaId: string }
   | { mode: 'edit'; areaId: string; bill: Bill }
   | null
-type MemberFormState = { mode: 'new' } | { mode: 'edit'; member: Member } | null
+/** Todo membro pertence a uma área compartilhada: o formulário e a exclusão sabem qual é. */
+type MemberFormState =
+  | { mode: 'new'; areaId: string }
+  | { mode: 'edit'; areaId: string; member: Member }
+  | null
 
 function App() {
   const store = useFinanceStore()
@@ -51,8 +55,12 @@ function App() {
   /** Área compartilhada sem participantes em que a pessoa tentou adicionar uma conta. */
   const [noParticipantsAreaId, setNoParticipantsAreaId] = useState<string | null>(null)
   const [memberForm, setMemberForm] = useState<MemberFormState>(null)
-  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null)
-  const [memberFeedback, setMemberFeedback] = useState<string | null>(null)
+  const [memberToDelete, setMemberToDelete] = useState<{ areaId: string; member: Member } | null>(
+    null,
+  )
+  const [memberFeedback, setMemberFeedback] = useState<{ areaId: string; text: string } | null>(
+    null,
+  )
   const currentMember = useCurrentMember(store.members)
   const [confirmClearExamples, setConfirmClearExamples] = useState(false)
   const [showBackup, setShowBackup] = useState(false)
@@ -60,6 +68,13 @@ function App() {
   const [areaFeedback, setAreaFeedback] = useState<{ type: AreaType; text: string } | null>(
     null,
   )
+
+  const memberFormArea = memberForm
+    ? store.areas.find((area) => area.id === memberForm.areaId)
+    : null
+  const memberToDeleteArea = memberToDelete
+    ? store.areas.find((area) => area.id === memberToDelete.areaId)
+    : null
 
   // Cada box mostra só as áreas do seu tipo; "Gastos da casa" é exibida pelo FamilyArea.
   const individualAreas = store.areas.filter((area) => area.type === 'individual')
@@ -114,25 +129,45 @@ function App() {
   const hasExamples = store.bills.some((bill) => bill.isExample)
 
   function handleSaveMember({ name, color }: MemberFormValues) {
-    if (memberForm?.mode === 'edit') {
+    if (!memberForm || !memberFormArea) return
+    const { areaId } = memberForm
+    if (memberForm.mode === 'edit') {
       const { member } = memberForm
       const nameChanged = name !== member.name
       const colorChanged = color !== member.color
       if (nameChanged || colorChanged) {
-        store.updateMember(member.id, { name, color })
-        setMemberFeedback(
-          nameChanged && colorChanged
-            ? '✓ Membro atualizado com sucesso.'
-            : nameChanged
-              ? '✓ Nome atualizado com sucesso.'
-              : '✓ Cor atualizada com sucesso.',
-        )
+        store.updateMember(areaId, member.id, { name, color })
+        setMemberFeedback({
+          areaId,
+          text:
+            nameChanged && colorChanged
+              ? '✓ Membro atualizado com sucesso.'
+              : nameChanged
+                ? '✓ Nome atualizado com sucesso.'
+                : '✓ Cor atualizada com sucesso.',
+        })
       }
     } else {
-      store.addMember(createMember(name, store.members, color))
-      setMemberFeedback('✓ Membro adicionado com sucesso.')
+      store.addMember(areaId, createMember(name, memberFormArea.members, color))
+      setMemberFeedback({ areaId, text: '✓ Membro adicionado com sucesso.' })
     }
     setMemberForm(null)
+  }
+
+  /** Seção de membros de uma área compartilhada, com ações só sobre os membros dela. */
+  function renderMembers(area: Area, title?: string) {
+    return (
+      <FamilyMembers
+        title={title}
+        members={area.members}
+        bills={area.bills.filter((bill) => bill.month === month)}
+        feedback={memberFeedback?.areaId === area.id ? memberFeedback.text : null}
+        canAdd={area.members.length < MAX_MEMBERS}
+        onAdd={() => setMemberForm({ mode: 'new', areaId: area.id })}
+        onEdit={(member) => setMemberForm({ mode: 'edit', areaId: area.id, member })}
+        onDelete={(member) => setMemberToDelete({ areaId: area.id, member })}
+      />
+    )
   }
 
   function handleSaveBill(input: BillInput) {
@@ -179,8 +214,8 @@ function App() {
           needsParticipants &&
           noParticipantsAreaId === area.id && (
             <p className="backup-message backup-message--error" role="alert">
-              Para criar contas nesta área compartilhada, é preciso cadastrar participantes
-              nela antes. Os participantes de “Gastos da casa” não são usados em outras áreas.
+              Adicione participantes na seção acima para cadastrar contas nesta área
+              compartilhada.
             </p>
           )
         }
@@ -205,6 +240,7 @@ function App() {
           onMarkPaid={(bill) => store.togglePaid(area.id, bill.id)}
           areaName={area.name}
         />
+        {area.type === 'shared' && renderMembers(area, 'Participantes')}
         {renderAreaBills(area)}
       </AreaCard>
     )
@@ -279,11 +315,11 @@ function App() {
             <FamilyMembers
               members={store.members}
               bills={monthBills}
-              feedback={memberFeedback}
+              feedback={memberFeedback?.areaId === HOME_AREA_ID ? memberFeedback.text : null}
               canAdd={store.members.length < MAX_MEMBERS}
-              onAdd={() => setMemberForm({ mode: 'new' })}
-              onEdit={(member) => setMemberForm({ mode: 'edit', member })}
-              onDelete={setMemberToDelete}
+              onAdd={() => setMemberForm({ mode: 'new', areaId: HOME_AREA_ID })}
+              onEdit={(member) => setMemberForm({ mode: 'edit', areaId: HOME_AREA_ID, member })}
+              onDelete={(member) => setMemberToDelete({ areaId: HOME_AREA_ID, member })}
             />
 
             <BillList
@@ -406,27 +442,31 @@ function App() {
         />
       )}
 
-      {memberForm && (
+      {memberForm && memberFormArea && (
         <MemberFormDialog
           member={memberForm.mode === 'edit' ? memberForm.member : undefined}
-          members={store.members}
+          members={memberFormArea.members}
           onSave={handleSaveMember}
           onCancel={() => setMemberForm(null)}
         />
       )}
 
-      {memberToDelete && (
+      {memberToDelete && memberToDeleteArea && (
         <DeleteMemberDialog
-          member={memberToDelete}
+          member={memberToDelete.member}
           blockers={getMemberDeletionBlockers(
-            memberToDelete,
-            store.members,
-            store.bills,
-            currentMember.member?.id ?? null,
+            memberToDelete.member,
+            memberToDeleteArea.members,
+            memberToDeleteArea.bills,
+            // O painel pessoal usa só os membros de "Gastos da casa".
+            memberToDelete.areaId === HOME_AREA_ID ? (currentMember.member?.id ?? null) : null,
           )}
           onConfirm={() => {
-            store.deleteMember(memberToDelete.id)
-            setMemberFeedback('✓ Membro excluído com sucesso.')
+            store.deleteMember(memberToDelete.areaId, memberToDelete.member.id)
+            setMemberFeedback({
+              areaId: memberToDelete.areaId,
+              text: '✓ Membro excluído com sucesso.',
+            })
             setMemberToDelete(null)
           }}
           onCancel={() => setMemberToDelete(null)}

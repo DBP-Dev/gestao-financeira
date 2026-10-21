@@ -8,7 +8,7 @@ import {
   migrateV1ToV2,
   removeArea,
 } from '../utils/areas'
-import { parseStoredData } from '../utils/backup'
+import { MAX_MEMBERS, parseStoredData } from '../utils/backup'
 import { getToday } from '../utils/dates'
 import { createId } from '../utils/ids'
 
@@ -201,28 +201,36 @@ export function useFinanceStore() {
     updateHome((home) => ({ ...home, bills: home.bills.filter((bill) => !bill.isExample) }))
   }
 
-  /** Atualiza o perfil exibido (nome e cor). O id e as contas não mudam. */
-  function updateMember(id: string, changes: Pick<Member, 'name' | 'color'>) {
-    updateHome((home) => ({
-      ...home,
-      members: home.members.map((member) =>
+  /** Atualiza o perfil exibido (nome e cor) na área indicada. O id e as contas não mudam. */
+  function updateMember(areaId: string, id: string, changes: Pick<Member, 'name' | 'color'>) {
+    updateArea(areaId, (area) => ({
+      ...area,
+      members: area.members.map((member) =>
         member.id === id ? { ...member, name: changes.name, color: changes.color } : member,
       ),
     }))
   }
 
-  function addMember(member: Member) {
-    updateHome((home) => ({ ...home, members: [...home.members, member] }))
+  /**
+   * Adiciona um membro à área indicada. Áreas individuais não têm membros, e uma área
+   * com MAX_MEMBERS não recebe mais ninguém (os dados salvos deixariam de ser válidos).
+   */
+  function addMember(areaId: string, member: Member) {
+    updateArea(areaId, (area) =>
+      area.type === 'individual' || area.members.length >= MAX_MEMBERS
+        ? area
+        : { ...area, members: [...area.members, member] },
+    )
   }
 
-  /** Exclui um membro somente se ele não participa de nenhuma conta e não é o último. */
-  function deleteMember(id: string) {
-    updateHome((home) => {
-      const hasShares = home.bills.some((bill) =>
+  /** Exclui um membro da área somente se ele não participa de nenhuma conta dela e não é o último. */
+  function deleteMember(areaId: string, id: string) {
+    updateArea(areaId, (area) => {
+      const hasShares = area.bills.some((bill) =>
         bill.shares.some((share) => share.memberId === id),
       )
-      if (hasShares || home.members.length <= 1) return home
-      return { ...home, members: home.members.filter((member) => member.id !== id) }
+      if (hasShares || area.members.length <= 1) return area
+      return { ...area, members: area.members.filter((member) => member.id !== id) }
     })
   }
 

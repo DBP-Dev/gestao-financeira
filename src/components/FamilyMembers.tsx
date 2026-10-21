@@ -1,8 +1,11 @@
+import { useId } from 'react'
 import type { Bill, Member } from '../types'
 import { formatBRL } from '../utils/money'
 import { Avatar } from './Avatar'
 
 interface FamilyMembersProps {
+  /** Título da seção. Padrão: "Membros", usado em "Gastos da casa". */
+  title?: string
   members: Member[]
   bills: Bill[]
   /** Mensagem da última ação (adicionar, editar ou excluir). */
@@ -26,6 +29,7 @@ function getMemberTotals(memberId: string, bills: Bill[]) {
 }
 
 export function FamilyMembers({
+  title = 'Membros',
   members,
   bills,
   feedback,
@@ -34,12 +38,14 @@ export function FamilyMembers({
   onEdit,
   onDelete,
 }: FamilyMembersProps) {
+  // Id único por instância: a seção aparece em mais de uma área.
+  const titleId = useId()
   return (
-    <section className="section" aria-labelledby="family-title">
+    <section className="section" aria-labelledby={titleId}>
       <div className="section__header section__header--with-action">
         <div>
-          <h4 id="family-title" className="section__title">
-            Membros
+          <h4 id={titleId} className="section__title">
+            {title}
           </h4>
           <p className="section__hint">
             {canAdd
