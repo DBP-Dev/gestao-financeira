@@ -61,10 +61,13 @@ export function createBackup(data: FinanceData, now: Date): BackupFile {
   }
 }
 
-/** "contas-da-familia-backup-2026-10-20-1430.json" */
+/**
+ * "gestao-de-gastos-backup-2026-10-20-1430.json". Só o nome do arquivo:
+ * o conteúdo continua identificado por BACKUP_FORMAT.
+ */
 export function createBackupFileName(
   now: Date,
-  prefix = 'contas-da-familia-backup',
+  prefix = 'gestao-de-gastos-backup',
   extension = 'json',
 ): string {
   const pad = (value: number) => String(value).padStart(2, '0')
@@ -263,7 +266,7 @@ function validateBill(
 
 function validateBackup(raw: unknown): { data: FinanceData; summary: BackupSummary } {
   if (!isPlainObject(raw) || raw.format !== BACKUP_FORMAT) {
-    fail('Este arquivo não é um backup do Contas da Família.')
+    fail('Este arquivo não é um backup do Gestão de Gastos.')
   }
 
   const { formatVersion, createdAt, data } = raw
@@ -323,7 +326,7 @@ function validateMembersAndBills(
 /** Dados da versão 1 ({ members, bills }), como eram validados antes das áreas. */
 function validateLegacyContent(members: unknown, bills: unknown): LegacyFinanceDataV1 {
   if (!Array.isArray(members) || members.length === 0) {
-    fail('Nenhum integrante da família foi encontrado.')
+    fail('Nenhum integrante foi encontrado.')
   }
   if (!Array.isArray(bills)) fail('A lista de contas não foi encontrada.')
   if (bills.length > MAX_BILLS) fail('Há contas demais.')

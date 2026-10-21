@@ -67,7 +67,7 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
     if (file.size > MAX_BACKUP_FILE_BYTES) {
       setRestore({
         status: 'error',
-        message: 'Este arquivo é grande demais para ser um backup do Contas da Família.',
+        message: 'Este arquivo é grande demais para ser um backup do Gestão de Gastos.',
       })
       resetFileInput()
       return

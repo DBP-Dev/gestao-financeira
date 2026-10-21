@@ -20,9 +20,9 @@ export function AppHeader({ month, currentMonth, onChangeMonth }: AppHeaderProps
           </svg>
         </span>
         <div>
-          <h1>Contas da Família</h1>
+          <h1>Gestão de Gastos</h1>
           <p className="app-header__subtitle">
-            Quem paga o quê, de um jeito simples.
+            Seus gastos do mês, sozinho ou em grupo.
           </p>
         </div>
       </div>

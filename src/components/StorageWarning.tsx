@@ -9,7 +9,7 @@ interface StorageWarningProps {
 export function StorageWarning({ issue }: StorageWarningProps) {
   function handleDownload() {
     if (issue.kind === 'unavailable') return
-    const fileName = createBackupFileName(new Date(), 'contas-da-familia-dados-originais', 'txt')
+    const fileName = createBackupFileName(new Date(), 'gestao-de-gastos-dados-originais', 'txt')
     downloadTextFile(issue.original, fileName)
   }
 
