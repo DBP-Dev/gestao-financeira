@@ -6,9 +6,10 @@ quanto foi gasto, quem paga o quê, quanto cabe a cada pessoa e o que já foi pa
 
 ## O que dá para fazer
 
-- **Áreas individuais**, para despesas pessoais, sem divisão entre pessoas.
+- **Minhas contas**, a área fixa para despesas pessoais, sem divisão entre pessoas.
+  Mostra o total e o pendente do mês e o que ficou em atraso de meses anteriores.
 - **Áreas compartilhadas**, cada uma com seus próprios participantes e contas.
-  A área “Gastos da casa” já vem criada.
+  A área “Gastos da casa” já vem criada, e novas áreas compartilhadas podem ser criadas.
 - **Contas por mês**, divididas igualmente ou com valores escolhidos para cada pessoa,
   marcadas como pagas ou pendentes e copiadas do mês anterior.
 - **Resumo do mês em cada área**: total, já pago, falta pagar e contas atrasadas de

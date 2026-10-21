@@ -8,6 +8,10 @@ import { createId } from './ids'
 export const HOME_AREA_ID = 'gastos-da-casa'
 export const HOME_AREA_NAME = 'Gastos da casa'
 
+/** Área individual fixa: o lugar das contas pessoais. Existe sempre, uma única vez. */
+export const MY_ACCOUNTS_AREA_ID = 'minhas-contas'
+export const MY_ACCOUNTS_AREA_NAME = 'Minhas contas'
+
 /** Mesmo limite do nome das contas. */
 export const MAX_AREA_NAME_LENGTH = 40
 export const MAX_AREAS = 50
@@ -17,11 +21,28 @@ export const AREA_TYPE_LABEL: Record<AreaType, string> = {
   shared: 'Compartilhada',
 }
 
+/**
+ * Garante a área "Minhas contas": se ela já existe, devolve a mesma lista sem mudanças;
+ * senão, acrescenta-a vazia logo depois de "Gastos da casa". Nunca altera outras áreas.
+ */
+export function ensureMyAccountsArea(areas: Area[]): Area[] {
+  if (areas.some((area) => area.id === MY_ACCOUNTS_AREA_ID)) return areas
+  const myAccounts: Area = {
+    id: MY_ACCOUNTS_AREA_ID,
+    name: MY_ACCOUNTS_AREA_NAME,
+    type: 'individual',
+    members: [],
+    bills: [],
+  }
+  const homeIndex = areas.findIndex((area) => area.id === HOME_AREA_ID)
+  return [...areas.slice(0, homeIndex + 1), myAccounts, ...areas.slice(homeIndex + 1)]
+}
+
 /** Converte os dados da versão 1 sem alterar membros nem contas. */
 export function migrateV1ToV2(legacy: LegacyFinanceDataV1): FinanceData {
   return {
     version: 2,
-    areas: [
+    areas: ensureMyAccountsArea([
       {
         id: HOME_AREA_ID,
         name: HOME_AREA_NAME,
@@ -29,7 +50,7 @@ export function migrateV1ToV2(legacy: LegacyFinanceDataV1): FinanceData {
         members: legacy.members,
         bills: legacy.bills,
       },
-    ],
+    ]),
   }
 }
 
@@ -61,14 +82,14 @@ export function validateAreaName(name: string, areas: Area[]): string | null {
   return null
 }
 
-/** Só áreas criadas pela pessoa podem ser excluídas; "Gastos da casa" é fixa. */
+/** Só áreas criadas pela pessoa podem ser excluídas; "Gastos da casa" e "Minhas contas" são fixas. */
 export function canDeleteArea(areaId: string): boolean {
-  return areaId !== HOME_AREA_ID
+  return areaId !== HOME_AREA_ID && areaId !== MY_ACCOUNTS_AREA_ID
 }
 
 /**
  * Remove uma área com todos os seus participantes e contas.
- * Se a área for "Gastos da casa" ou não existir, devolve os dados sem nenhuma mudança.
+ * Se a área for fixa ou não existir, devolve os dados sem nenhuma mudança.
  */
 export function removeArea(data: FinanceData, areaId: string): FinanceData {
   if (!canDeleteArea(areaId) || !data.areas.some((area) => area.id === areaId)) return data

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_MEMBERS, createInitialData } from '../data/sampleData'
-import type { Area, AreaType, Bill, FinanceData, Member, MonthKey } from '../types'
+import type { Area, Bill, FinanceData, Member, MonthKey } from '../types'
 import {
   HOME_AREA_ID,
   createArea,
@@ -234,11 +234,14 @@ export function useFinanceStore() {
     })
   }
 
-  /** Cria uma área vazia. O nome já deve ter sido validado (validateAreaName). */
-  function addArea(name: string, type: AreaType) {
+  /**
+   * Cria uma área compartilhada vazia. O nome já deve ter sido validado (validateAreaName).
+   * Áreas individuais não são criadas: a única é a fixa "Minhas contas".
+   */
+  function addArea(name: string) {
     setData((current) => ({
       ...current,
-      areas: [...current.areas, createArea(name, type, current.areas)],
+      areas: [...current.areas, createArea(name, 'shared', current.areas)],
     }))
   }
 

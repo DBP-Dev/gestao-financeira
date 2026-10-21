@@ -460,6 +460,87 @@
   flex-shrink: 0;
 }
 
+/* Box individual: contorno e espaçamento um pouco maiores que os do box compartilhado. */
+.account-group--individual {
+  gap: 20px;
+  padding: 24px;
+  border-width: 2px;
+}
+
+/* ---------- Indicadores das contas individuais ---------- */
+
+.individual-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px 20px;
+}
+
+.individual-summary dl,
+.individual-summary dd {
+  margin: 0;
+}
+
+.individual-summary__month,
+.individual-summary__overdue {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+
+/* Separado dos valores do mês: não deve ser somado a eles. */
+.individual-summary__overdue {
+  max-width: 15rem;
+  padding-left: 20px;
+  border-left: 1px solid var(--border);
+}
+
+.individual-summary__item {
+  display: flex;
+  flex-direction: column;
+  align-items: inherit;
+}
+
+.individual-summary__item--inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 0 6px;
+}
+
+.individual-summary__label {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+}
+
+.individual-summary__total,
+.individual-summary__overdue-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.individual-summary__pending {
+  font-size: 0.9rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.individual-summary__overdue--late .individual-summary__overdue-value {
+  color: var(--danger);
+}
+
+.individual-summary__hint {
+  color: var(--text-soft);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
 .account-group__empty {
   padding: 14px 16px;
   border: 1px dashed var(--border-strong);
@@ -1610,6 +1691,38 @@ select.input option {
 
   .account-group {
     padding: 14px 12px;
+  }
+
+  .account-group--individual {
+    padding: 18px 16px;
+  }
+
+  /* Indicadores ocupam a largura toda, alinhados à esquerda, um bloco abaixo do outro. */
+  .account-group--individual .account-group__action {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .individual-summary {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .individual-summary__month,
+  .individual-summary__overdue {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .individual-summary__item--inline {
+    justify-content: flex-start;
+  }
+
+  .individual-summary__overdue {
+    max-width: none;
+    padding: 10px 0 0;
+    border-left: none;
+    border-top: 1px solid var(--border);
   }
 
   /*

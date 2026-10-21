@@ -10,6 +10,7 @@ import { BillList } from './components/BillList'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { FamilyArea } from './components/FamilyArea'
 import { FamilyMembers } from './components/FamilyMembers'
+import { IndividualSummary } from './components/IndividualSummary'
 import { MonthSummary } from './components/MonthSummary'
 import { PersonalPanel } from './components/PersonalPanel'
 import { DeleteMemberDialog } from './components/DeleteMemberDialog'
@@ -18,9 +19,16 @@ import { StorageWarning } from './components/StorageWarning'
 import { useCurrentMember } from './hooks/useCurrentMember'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
 import { useToday } from './hooks/useToday'
-import type { Area, AreaType, Bill, Member } from './types'
+import type { Area, Bill, Member } from './types'
 import { HOME_AREA_ID, MAX_AREAS, canDeleteArea } from './utils/areas'
-import { addMonths, effectiveDueDay, formatMonthName, getBillStatus } from './utils/dates'
+import { getBillsTotals } from './utils/billTotals'
+import {
+  addMonths,
+  effectiveDueDay,
+  formatMonthLabel,
+  formatMonthName,
+  getBillStatus,
+} from './utils/dates'
 import { MAX_MEMBERS, createMember, getMemberDeletionBlockers } from './utils/members'
 
 function plural(count: number, singular: string, pluralForm: string) {
@@ -64,10 +72,9 @@ function App() {
   const currentMember = useCurrentMember(store.members)
   const [confirmClearExamples, setConfirmClearExamples] = useState(false)
   const [showBackup, setShowBackup] = useState(false)
-  const [areaFormType, setAreaFormType] = useState<AreaType | null>(null)
-  const [areaFeedback, setAreaFeedback] = useState<{ type: AreaType; text: string } | null>(
-    null,
-  )
+  const [showAreaForm, setShowAreaForm] = useState(false)
+  /** Mensagem da última criação ou exclusão de área (só há áreas compartilhadas novas). */
+  const [areaFeedback, setAreaFeedback] = useState<string | null>(null)
 
   const memberFormArea = memberForm
     ? store.areas.find((area) => area.id === memberForm.areaId)
@@ -77,39 +84,29 @@ function App() {
     : null
 
   // Cada box mostra só as áreas do seu tipo; "Gastos da casa" é exibida pelo FamilyArea.
+  // A única área individual é "Minhas contas" (o validador recusa outras).
   const individualAreas = store.areas.filter((area) => area.type === 'individual')
   const otherSharedAreas = store.areas.filter(
     (area) => area.type === 'shared' && area.id !== HOME_AREA_ID,
   )
   const canAddArea = store.areas.length < MAX_AREAS
 
-  function handleCreateArea({ name, type }: AreaFormValues) {
-    store.addArea(name, type)
-    setAreaFeedback({ type, text: `✓ Área “${name}” criada com sucesso.` })
-    setAreaFormType(null)
-  }
+  // Indicadores das contas individuais.
+  const individualBills = individualAreas.flatMap((area) => area.bills)
+  const individualMonthTotals = getBillsTotals(
+    individualBills.filter((bill) => bill.month === month),
+  )
+  // Meses anteriores ao mês atual real, não ao selecionado; contas do mês atual ficam fora.
+  const individualPreviousOverdue = getBillsTotals(
+    individualBills.filter(
+      (bill) => bill.month < today.month && getBillStatus(bill, today) === 'late',
+    ),
+  )
 
-  function newAreaButton(type: AreaType) {
-    return (
-      <button
-        type="button"
-        className="button button--small button--ghost"
-        onClick={() => setAreaFormType(type)}
-        disabled={!canAddArea}
-      >
-        ＋ Nova área
-      </button>
-    )
-  }
-
-  function areaFeedbackFor(type: AreaType) {
-    return (
-      <p className="members__feedback" role="status">
-        {areaFeedback?.type === type && (
-          <span className="backup-message backup-message--ok">{areaFeedback.text}</span>
-        )}
-      </p>
-    )
+  function handleCreateArea({ name }: AreaFormValues) {
+    store.addArea(name)
+    setAreaFeedback(`✓ Área “${name}” criada com sucesso.`)
+    setShowAreaForm(false)
   }
 
   /** Contas atrasadas de meses anteriores ao selecionado (nunca entram nos totais do mês). */
@@ -201,14 +198,18 @@ function App() {
         onEdit={(bill) => setBillForm({ mode: 'edit', areaId: area.id, bill })}
         onDelete={(bill) => setBillToDelete({ areaId: area.id, bill })}
         actions={
-          <button
-            type="button"
-            className="button button--small button--ghost button--danger-text"
-            onClick={() => setAreaToDelete(area)}
-            aria-label={`Excluir a área ${area.name}`}
-          >
-            Excluir área
-          </button>
+          // Áreas individuais não são excluídas pela interface; "Minhas contas" é fixa.
+          area.type === 'shared' &&
+          canDeleteArea(area.id) && (
+            <button
+              type="button"
+              className="button button--small button--ghost button--danger-text"
+              onClick={() => setAreaToDelete(area)}
+              aria-label={`Excluir a área ${area.name}`}
+            >
+              Excluir área
+            </button>
+          )
         }
         notice={
           needsParticipants &&
@@ -282,25 +283,42 @@ function App() {
 
         <AccountGroup
           icon="person"
-          title="Contas individuais"
+          title={currentMember.member?.name ?? 'Contas individuais'}
           description="Despesas pessoais"
-          action={newAreaButton('individual')}
+          variant="individual"
+          action={
+            <IndividualSummary
+              monthLabel={formatMonthLabel(month).toLocaleLowerCase('pt-BR')}
+              currentMonthLabel={formatMonthLabel(today.month).toLocaleLowerCase('pt-BR')}
+              monthTotalCents={individualMonthTotals.totalCents}
+              monthPendingCents={individualMonthTotals.pendingCents}
+              previousOverdueCents={individualPreviousOverdue.pendingCents}
+            />
+          }
         >
-          {areaFeedbackFor('individual')}
-          {individualAreas.length === 0 ? (
-            <p className="account-group__empty">Nenhuma área individual foi criada ainda.</p>
-          ) : (
-            individualAreas.map(renderAreaCard)
-          )}
+          {individualAreas.map(renderAreaCard)}
         </AccountGroup>
 
         <AccountGroup
           icon="people"
           title="Contas compartilhadas"
           description="Despesas divididas entre pessoas"
-          action={newAreaButton('shared')}
+          action={
+            <button
+              type="button"
+              className="button button--small button--ghost"
+              onClick={() => setShowAreaForm(true)}
+              disabled={!canAddArea}
+            >
+              ＋ Nova área
+            </button>
+          }
         >
-          {areaFeedbackFor('shared')}
+          <p className="members__feedback" role="status">
+            {areaFeedback && (
+              <span className="backup-message backup-message--ok">{areaFeedback}</span>
+            )}
+          </p>
           <FamilyArea
             memberCount={store.members.length}
             bills={monthBills}
@@ -351,12 +369,11 @@ function App() {
         </button>
       </footer>
 
-      {areaFormType && (
+      {showAreaForm && (
         <AreaFormDialog
-          initialType={areaFormType}
           areas={store.areas}
           onSave={handleCreateArea}
-          onCancel={() => setAreaFormType(null)}
+          onCancel={() => setShowAreaForm(false)}
         />
       )}
 
@@ -419,10 +436,7 @@ function App() {
           onConfirm={() => {
             store.deleteArea(areaToDelete.id)
             if (noParticipantsAreaId === areaToDelete.id) setNoParticipantsAreaId(null)
-            setAreaFeedback({
-              type: areaToDelete.type,
-              text: `✓ Área “${areaToDelete.name}” excluída com sucesso.`,
-            })
+            setAreaFeedback(`✓ Área “${areaToDelete.name}” excluída com sucesso.`)
             setAreaToDelete(null)
           }}
           onCancel={() => setAreaToDelete(null)}

@@ -3,7 +3,10 @@ import {
   HOME_AREA_ID,
   MAX_AREA_NAME_LENGTH,
   MAX_AREAS,
+  MY_ACCOUNTS_AREA_ID,
+  MY_ACCOUNTS_AREA_NAME,
   cleanAreaName,
+  ensureMyAccountsArea,
   migrateV1ToV2,
 } from './areas'
 import { MAX_AMOUNT_CENTS } from './money'
@@ -370,7 +373,10 @@ function validateArea(
   }
 }
 
-/** Dados da versão 2 ({ areas }). A área "Gastos da casa" é obrigatória. */
+/**
+ * Dados da versão 2 ({ areas }). A área "Gastos da casa" é obrigatória.
+ * "Minhas contas" é acrescentada vazia se faltar (só na memória), e precisa ser individual.
+ */
 function validateAreas(areas: unknown): FinanceData {
   if (!Array.isArray(areas) || areas.length === 0) fail('Nenhuma área foi encontrada.')
   if (areas.length > MAX_AREAS) fail('Há áreas demais.')
@@ -386,7 +392,33 @@ function validateAreas(areas: unknown): FinanceData {
   if (home.type !== 'shared') fail('A área “Gastos da casa” precisa ser compartilhada.')
   if (home.members.length === 0) fail('A área “Gastos da casa” não tem nenhum membro.')
 
-  return { version: 2, areas: cleanAreas }
+  const myAccounts = cleanAreas.find((area) => area.id === MY_ACCOUNTS_AREA_ID)
+  if (myAccounts && myAccounts.type !== 'individual') {
+    fail('A área “Minhas contas” precisa ser individual.')
+  }
+  // Os nomes já vêm limpos por validateArea; nenhum nome é corrigido automaticamente.
+  if (myAccounts && myAccounts.name !== MY_ACCOUNTS_AREA_NAME) {
+    fail('A área fixa “Minhas contas” não pode ter outro nome.')
+  }
+  const reservedName = MY_ACCOUNTS_AREA_NAME.toLocaleLowerCase('pt-BR')
+  const nameClash = cleanAreas.some(
+    (area) =>
+      area.id !== MY_ACCOUNTS_AREA_ID && area.name.toLocaleLowerCase('pt-BR') === reservedName,
+  )
+  if (nameClash) fail('O nome “Minhas contas” é reservado para a área fixa.')
+  // "Minhas contas" é a única área individual; dados antigos com outras não são aceitos.
+  const otherIndividual = cleanAreas.find(
+    (area) => area.type === 'individual' && area.id !== MY_ACCOUNTS_AREA_ID,
+  )
+  if (otherIndividual) {
+    fail(`A área individual “${otherIndividual.name}” não é aceita: só “Minhas contas” pode ser individual.`)
+  }
+
+  // O limite conta "Minhas contas", para os dados salvos continuarem válidos ao reabrir.
+  const withMyAccounts = ensureMyAccountsArea(cleanAreas)
+  if (withMyAccounts.length > MAX_AREAS) fail('Há áreas demais.')
+
+  return { version: 2, areas: withMyAccounts }
 }
 
 export type StoredDataParseResult =
