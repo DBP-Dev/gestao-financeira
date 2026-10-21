@@ -97,14 +97,18 @@ function App() {
     )
   }
 
+  /** Contas atrasadas de meses anteriores ao selecionado (nunca entram nos totais do mês). */
+  function getOverdueBills(bills: Bill[]) {
+    return bills
+      .filter((bill) => bill.month < month && getBillStatus(bill, today) === 'late')
+      .sort(
+        (a, b) =>
+          a.month.localeCompare(b.month) || effectiveDueDay(a) - effectiveDueDay(b),
+      )
+  }
+
   const monthBills = store.bills.filter((bill) => bill.month === month)
-  // Meses anteriores ao selecionado: nunca se misturam com os totais do mês.
-  const overdueBills = store.bills
-    .filter((bill) => bill.month < month && getBillStatus(bill, today) === 'late')
-    .sort(
-      (a, b) =>
-        a.month.localeCompare(b.month) || effectiveDueDay(a) - effectiveDueDay(b),
-    )
+  const overdueBills = getOverdueBills(store.bills)
   const previousMonth = addMonths(month, -1)
   const previousMonthHasBills = store.bills.some((bill) => bill.month === previousMonth)
   const hasExamples = store.bills.some((bill) => bill.isExample)
@@ -161,6 +165,16 @@ function App() {
         onTogglePaid={(bill) => store.togglePaid(area.id, bill.id)}
         onEdit={(bill) => setBillForm({ mode: 'edit', areaId: area.id, bill })}
         onDelete={(bill) => setBillToDelete({ areaId: area.id, bill })}
+        actions={
+          <button
+            type="button"
+            className="button button--small button--ghost button--danger-text"
+            onClick={() => setAreaToDelete(area)}
+            aria-label={`Excluir a área ${area.name}`}
+          >
+            Excluir área
+          </button>
+        }
         notice={
           needsParticipants &&
           noParticipantsAreaId === area.id && (
@@ -171,6 +185,20 @@ function App() {
           )
         }
       />
+    )
+  }
+
+  /** Área criada pela pessoa: totais, pendências e atrasadas calculados só com as contas dela. */
+  function renderAreaCard(area: Area) {
+    return (
+      <AreaCard
+        key={area.id}
+        area={area}
+        monthBills={area.bills.filter((bill) => bill.month === month)}
+        overdueCount={getOverdueBills(area.bills).length}
+      >
+        {renderAreaBills(area)}
+      </AreaCard>
     )
   }
 
@@ -218,11 +246,7 @@ function App() {
           {individualAreas.length === 0 ? (
             <p className="account-group__empty">Nenhuma área individual foi criada ainda.</p>
           ) : (
-            individualAreas.map((area) => (
-              <AreaCard key={area.id} area={area} onDelete={() => setAreaToDelete(area)}>
-                {renderAreaBills(area)}
-              </AreaCard>
-            ))
+            individualAreas.map(renderAreaCard)
           )}
         </AccountGroup>
 
@@ -268,11 +292,7 @@ function App() {
               onDelete={(bill) => setBillToDelete({ areaId: HOME_AREA_ID, bill })}
             />
           </FamilyArea>
-          {otherSharedAreas.map((area) => (
-            <AreaCard key={area.id} area={area} onDelete={() => setAreaToDelete(area)}>
-              {renderAreaBills(area)}
-            </AreaCard>
-          ))}
+          {otherSharedAreas.map(renderAreaCard)}
         </AccountGroup>
       </main>
 

@@ -32,10 +32,10 @@ export function BillCard({
     <article className={`bill-card bill-card--${status}`}>
       <div className="bill-card__top">
         <div>
-          <h3 className="bill-card__name">
+          <h5 className="bill-card__name">
             {bill.name}
             {bill.isExample && <span className="tag tag--example">Exemplo</span>}
-          </h3>
+          </h5>
           <p className="bill-card__due">Vence em {formatDueDate(bill)}</p>
         </div>
         <div className="bill-card__amount">

@@ -1,44 +1,36 @@
 import type { ReactNode } from 'react'
-import type { Area } from '../types'
+import type { Area, Bill } from '../types'
 import { AREA_TYPE_LABEL } from '../utils/areas'
+import { FamilyArea } from './FamilyArea'
 
 interface AreaCardProps {
   area: Area
-  /** Abre a confirmação de exclusão da área. */
-  onDelete: () => void
-  /** Conteúdo da área (lista de contas). Mostra só dados da própria área. */
+  /** Contas desta área no mês selecionado (para total e pendente do cabeçalho). */
+  monthBills: Bill[]
+  /** Contas atrasadas de meses anteriores desta área. */
+  overdueCount: number
+  /** Conteúdo da área (lista de contas, com a ação "Excluir área"). Só dados da própria área. */
   children: ReactNode
 }
 
-/** Cartão de uma área criada pela pessoa. */
-export function AreaCard({ area, onDelete, children }: AreaCardProps) {
-  const memberCount = area.members.length
+function describeArea(area: Area): string {
+  if (area.type === 'individual') return AREA_TYPE_LABEL.individual
+  const count = area.members.length
+  const participants =
+    count === 0 ? 'Nenhum participante ainda' : count === 1 ? '1 participante' : `${count} participantes`
+  return `${AREA_TYPE_LABEL.shared} · ${participants}`
+}
+
+/** Área criada pela pessoa, com o mesmo comportamento recolhível de "Gastos da casa". */
+export function AreaCard({ area, monthBills, overdueCount, children }: AreaCardProps) {
   return (
-    <article className="area-card" aria-label={`Área ${area.name}`}>
-      <div className="area-card__header">
-        <h3 className="area-card__name">{area.name}</h3>
-        <div className="area-card__header-actions">
-          <span className="tag">{AREA_TYPE_LABEL[area.type]}</span>
-          <button
-            type="button"
-            className="button button--small button--ghost button--danger-text"
-            onClick={onDelete}
-            aria-label={`Excluir a área ${area.name}`}
-          >
-            Excluir área
-          </button>
-        </div>
-      </div>
-      {area.type === 'shared' && (
-        <p className="area-card__meta">
-          {memberCount === 0
-            ? 'Nenhum participante ainda'
-            : memberCount === 1
-              ? '1 participante'
-              : `${memberCount} participantes`}
-        </p>
-      )}
-      <div className="area-card__content">{children}</div>
-    </article>
+    <FamilyArea
+      name={area.name}
+      meta={describeArea(area)}
+      bills={monthBills}
+      overdueCount={overdueCount}
+    >
+      {children}
+    </FamilyArea>
   )
 }

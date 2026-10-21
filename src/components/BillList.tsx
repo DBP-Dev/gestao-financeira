@@ -17,6 +17,8 @@ interface BillListProps {
   onDelete: (bill: Bill) => void
   /** Aviso opcional exibido logo abaixo do cabeçalho da lista. */
   notice?: ReactNode
+  /** Ações extras exibidas à esquerda de "Adicionar conta" (ex.: "Excluir área"). */
+  actions?: ReactNode
 }
 
 export function BillList({
@@ -32,25 +34,36 @@ export function BillList({
   onEdit,
   onDelete,
   notice,
+  actions,
 }: BillListProps) {
   // Id único: pode haver uma lista por área na mesma página.
   const titleId = useId()
   const sortedBills = [...bills].sort(
     (a, b) => effectiveDueDay(a) - effectiveDueDay(b) || a.name.localeCompare(b.name),
   )
+  const addButton = (
+    <button type="button" className="button button--primary add-button" onClick={onAdd}>
+      ＋ Adicionar conta
+    </button>
+  )
 
   return (
     <section className="section" aria-labelledby={titleId}>
       <div className="section__header section__header--with-action">
         <div>
-          <h2 id={titleId} className="section__title">
+          <h4 id={titleId} className="section__title">
             Contas de {monthName}
-          </h2>
+          </h4>
           <p className="section__hint">Organizadas pela data de vencimento</p>
         </div>
-        <button type="button" className="button button--primary add-button" onClick={onAdd}>
-          ＋ Adicionar conta
-        </button>
+        {actions ? (
+          <div className="section__actions">
+            {actions}
+            {addButton}
+          </div>
+        ) : (
+          addButton
+        )}
       </div>
 
       {notice}
@@ -63,7 +76,7 @@ export function BillList({
               <path d="M9 8h6M9 12h6" />
             </svg>
           </span>
-          <h3>Nenhuma conta em {monthName} ainda</h3>
+          <h5>Nenhuma conta em {monthName} ainda</h5>
           <p>Adicione a primeira conta do mês para começar a organizar.</p>
           <div className="empty-state__actions">
             <button type="button" className="button button--primary" onClick={onAdd}>

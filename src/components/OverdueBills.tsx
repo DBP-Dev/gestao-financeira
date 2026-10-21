@@ -18,9 +18,9 @@ export function OverdueBills({ bills, onMarkPaid }: OverdueBillsProps) {
   return (
     <div className="overdue" role="region" aria-labelledby={titleId}>
       <div className="overdue__header">
-        <h3 id={titleId} className="overdue__title">
+        <h4 id={titleId} className="overdue__title">
           ! Contas atrasadas de meses anteriores
-        </h3>
+        </h4>
         <p className="overdue__total">
           {bills.length === 1 ? '1 conta' : `${bills.length} contas`} ·{' '}
           <strong>{formatBRL(total)}</strong> em atraso

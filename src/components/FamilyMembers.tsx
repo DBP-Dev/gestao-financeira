@@ -38,9 +38,9 @@ export function FamilyMembers({
     <section className="section" aria-labelledby="family-title">
       <div className="section__header section__header--with-action">
         <div>
-          <h2 id="family-title" className="section__title">
+          <h4 id="family-title" className="section__title">
             Membros
-          </h2>
+          </h4>
           <p className="section__hint">
             {canAdd
               ? 'Quanto cabe a cada um neste mês'

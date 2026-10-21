@@ -460,47 +460,6 @@
   flex-shrink: 0;
 }
 
-.area-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.area-card__header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px 12px;
-}
-
-.area-card__name {
-  font-size: 1.1rem;
-  font-weight: 650;
-  overflow-wrap: anywhere;
-}
-
-.area-card__header-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.area-card__meta {
-  color: var(--text-soft);
-  font-size: 0.9rem;
-}
-
-.area-card__content {
-  margin-top: 8px;
-}
-
 .account-group__empty {
   padding: 14px 16px;
   border: 1px dashed var(--border-strong);
@@ -556,6 +515,7 @@
 .area__name {
   font-size: 1.25rem;
   font-weight: 650;
+  overflow-wrap: anywhere;
 }
 
 .area__meta {
@@ -805,6 +765,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+/* Ações do cabeçalho da lista: a mais discreta à esquerda de "Adicionar conta". */
+.section__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .section__title {
@@ -1071,7 +1038,9 @@
   color: var(--text-soft);
 }
 
-.empty-state h3 {
+/* Título do estado vazio: h5 na hierarquia, com o mesmo tamanho visual de antes (1.17em). */
+.empty-state h5 {
+  font-size: 1.17em;
   font-weight: 650;
 }
 
@@ -1643,8 +1612,20 @@ select.input option {
     padding: 14px 12px;
   }
 
-  .area-card {
-    padding: 12px 10px;
+  /*
+   * "Excluir área" mantém o tamanho pequeno e fica antes de "Adicionar conta".
+   * Se os dois não couberem lado a lado, "Adicionar conta" desce inteiro para a linha
+   * de baixo em vez de quebrar o texto em várias linhas.
+   */
+  .section__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .section__actions .add-button {
+    flex: 1 1 auto;
+    width: auto;
+    white-space: nowrap;
   }
 
   /* Se o nome e o valor não couberem lado a lado, o valor desce para a linha de baixo. */
