@@ -15,7 +15,7 @@ interface BillCardProps {
 const STATUS_LABEL: Record<BillStatus, string> = {
   paid: '✓ Paga',
   pending: '○ Pendente',
-  late: '! Atrasada',
+  late: 'Atrasada',
 }
 
 export function BillCard({

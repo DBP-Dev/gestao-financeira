@@ -14,6 +14,10 @@ interface FamilyMembersProps {
   onAdd: () => void
   onEdit: (member: Member) => void
   onDelete: (member: Member) => void
+  /** Participante marcado como "eu" nesta área (só em áreas compartilhadas criadas). */
+  selfMemberId?: string | null
+  /** Se informado, mostra "Sou eu": marca o participante ou, se já marcado, desmarca. */
+  onToggleSelf?: (member: Member) => void
 }
 
 function getMemberTotals(memberId: string, bills: Bill[]) {
@@ -37,6 +41,8 @@ export function FamilyMembers({
   onAdd,
   onEdit,
   onDelete,
+  selfMemberId = null,
+  onToggleSelf,
 }: FamilyMembersProps) {
   // Id único por instância: a seção aparece em mais de uma área.
   const titleId = useId()
@@ -70,8 +76,9 @@ export function FamilyMembers({
       <ul className="members">
         {members.map((member) => {
           const { total, pending } = getMemberTotals(member.id, bills)
+          const isSelf = member.id === selfMemberId
           return (
-            <li key={member.id} className="member-card">
+            <li key={member.id} className={`member-card ${isSelf ? 'member-card--self' : ''}`}>
               <Avatar member={member} size="large" />
               <strong className="member-card__name">{member.name}</strong>
               {total === 0 ? (
@@ -89,6 +96,17 @@ export function FamilyMembers({
                 </>
               )}
               <div className="member-card__actions">
+                {onToggleSelf && (
+                  <button
+                    type="button"
+                    className="link-button link-button--self"
+                    onClick={() => onToggleSelf(member)}
+                    aria-pressed={isSelf}
+                    aria-label={`Sou eu: ${member.name}`}
+                  >
+                    {isSelf ? '✓ Sou eu' : 'Sou eu'}
+                  </button>
+                )}
                 <button
                   type="button"
                   className="link-button"

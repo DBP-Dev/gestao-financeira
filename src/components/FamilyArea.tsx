@@ -13,6 +13,20 @@ interface FamilyAreaProps {
   bills: Bill[]
   /** Quantidade de contas atrasadas de meses anteriores (mesma lista do alerta completo). */
   overdueCount: number
+  /** Texto da etiqueta de atraso. Padrão: a quantidade ("2 contas atrasadas"). */
+  overdueLabel?: string
+  /** Avisos de vencimento exibidos no lugar de total e pendente do cabeçalho (pode ser vazio). */
+  notices?: ReactNode
+  /**
+   * Quando os avisos substituem total e pendente: "always" (aberta e recolhida) ou
+   * "expanded" (só aberta; recolhida mostra total e pendente).
+   */
+  noticesWhen?: 'always' | 'expanded'
+  /**
+   * Se informado, o segundo indicador vira "Minha parte" no lugar de "Pendente":
+   * soma das parcelas do usuário no mês (centavos) ou null quando não se sabe quem é ele ("—").
+   */
+  myShareCents?: number | null
   /** Conteúdo completo da área: resumo, membros e contas. */
   children: ReactNode
 }
@@ -28,10 +42,15 @@ export function FamilyArea({
   memberCount = 0,
   bills,
   overdueCount,
+  overdueLabel,
+  notices,
+  noticesWhen = 'always',
+  myShareCents,
   children,
 }: FamilyAreaProps) {
   // Sempre começa recolhida ao abrir ou recarregar o aplicativo.
   const [expanded, setExpanded] = useState(false)
+  const showNotices = notices !== undefined && (noticesWhen === 'always' || expanded)
   const contentId = useId()
   const { totalCents, pendingCents } = getBillsTotals(bills)
 
@@ -52,20 +71,34 @@ export function FamilyArea({
             </span>
             {overdueCount > 0 && (
               <span className="tag tag--late area__overdue">
-                ! {overdueCount === 1 ? '1 conta atrasada' : `${overdueCount} contas atrasadas`}
+                {overdueLabel ??
+                  (overdueCount === 1 ? '1 conta atrasada' : `${overdueCount} contas atrasadas`)}
               </span>
             )}
           </span>
-          <span className="area__figures">
-            <span className="area__figure">
-              <span className="area__figure-label">Total do mês</span>
-              <span className="area__figure-value">{formatBRL(totalCents)}</span>
+          {showNotices ? (
+            <span className="area__notices">{notices}</span>
+          ) : (
+            <span className="area__figures">
+              <span className="area__figure">
+                <span className="area__figure-label">Total do mês</span>
+                <span className="area__figure-value">{formatBRL(totalCents)}</span>
+              </span>
+              {myShareCents === undefined ? (
+                <span className="area__figure">
+                  <span className="area__figure-label">Pendente</span>
+                  <span className="area__figure-value">{formatBRL(pendingCents)}</span>
+                </span>
+              ) : (
+                <span className="area__figure">
+                  <span className="area__figure-label">Minha parte</span>
+                  <span className="area__figure-value">
+                    {myShareCents === null ? '—' : formatBRL(myShareCents)}
+                  </span>
+                </span>
+              )}
             </span>
-            <span className="area__figure">
-              <span className="area__figure-label">Pendente</span>
-              <span className="area__figure-value">{formatBRL(pendingCents)}</span>
-            </span>
-          </span>
+          )}
           <svg
             className="area__chevron"
             viewBox="0 0 24 24"

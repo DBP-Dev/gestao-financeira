@@ -60,3 +60,23 @@ export function getBillStatus(bill: Bill, today: Today): BillStatus {
     bill.month === today.month && effectiveDueDay(bill) < today.day
   return isPastMonth || isPastDayThisMonth ? 'late' : 'pending'
 }
+
+/** Dias corridos de hoje até o vencimento (0 = vence hoje; negativo = já venceu). */
+export function daysUntilDue(bill: Bill, today: Today): number {
+  const due = parseMonthKey(bill.month)
+  const now = parseMonthKey(today.month)
+  // UTC evita diferenças de horário de verão na conta de dias.
+  const dueTime = Date.UTC(due.year, due.month - 1, effectiveDueDay(bill))
+  const todayTime = Date.UTC(now.year, now.month - 1, today.day)
+  return Math.round((dueTime - todayTime) / 86_400_000)
+}
+
+/**
+ * Conta pendente (não paga e ainda não vencida) que vence nos próximos `days` dias,
+ * contando hoje: com 3, vale hoje, amanhã e depois de amanhã.
+ */
+export function isDueSoon(bill: Bill, today: Today, days = 3): boolean {
+  if (getBillStatus(bill, today) !== 'pending') return false
+  const remaining = daysUntilDue(bill, today)
+  return remaining >= 0 && remaining < days
+}

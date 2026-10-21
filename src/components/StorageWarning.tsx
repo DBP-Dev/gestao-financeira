@@ -18,7 +18,7 @@ export function StorageWarning({ issue }: StorageWarningProps) {
       <div className="notice__content">
         {issue.kind === 'unavailable' ? (
           <>
-            <strong>! O navegador bloqueou o acesso aos dados salvos.</strong>
+            <strong>O navegador bloqueou o acesso aos dados salvos.</strong>
             <p>
               Para proteger o que estiver guardado, nada será gravado neste navegador enquanto
               o acesso estiver bloqueado. As alterações feitas agora serão perdidas ao fechar a
@@ -27,7 +27,7 @@ export function StorageWarning({ issue }: StorageWarningProps) {
           </>
         ) : (
           <>
-            <strong>! Não foi possível abrir os dados salvos neste navegador.</strong>
+            <strong>Não foi possível abrir os dados salvos neste navegador.</strong>
             <p>Motivo: {issue.reason}</p>
             {issue.kind === 'recovered' ? (
               <p>

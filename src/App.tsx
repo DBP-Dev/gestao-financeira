@@ -16,18 +16,21 @@ import { PersonalPanel } from './components/PersonalPanel'
 import { DeleteMemberDialog } from './components/DeleteMemberDialog'
 import { MemberFormDialog, type MemberFormValues } from './components/MemberFormDialog'
 import { StorageWarning } from './components/StorageWarning'
+import { useAreaSelf } from './hooks/useAreaSelf'
 import { useCurrentMember } from './hooks/useCurrentMember'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
 import { useToday } from './hooks/useToday'
 import type { Area, Bill, Member } from './types'
-import { HOME_AREA_ID, MAX_AREAS, canDeleteArea } from './utils/areas'
+import { HOME_AREA_ID, MAX_AREAS, MY_ACCOUNTS_AREA_ID, canDeleteArea } from './utils/areas'
 import { getBillsTotals } from './utils/billTotals'
+import { getMemberShareTotals } from './utils/personal'
 import {
   addMonths,
   effectiveDueDay,
   formatMonthLabel,
   formatMonthName,
   getBillStatus,
+  isDueSoon,
 } from './utils/dates'
 import { MAX_MEMBERS, createMember, getMemberDeletionBlockers } from './utils/members'
 
@@ -70,6 +73,20 @@ function App() {
     null,
   )
   const currentMember = useCurrentMember(store.members)
+  // "Eu" nas áreas compartilhadas criadas (escolha deste aparelho, fora do backup).
+  const areaSelf = useAreaSelf(store.areas, store.storageIssue === null)
+
+  /**
+   * "Minha parte" de uma área compartilhada: soma das parcelas registradas do usuário nas
+   * contas do mês (pagas e pendentes). null quando não se sabe quem é ele na área.
+   * "Gastos da casa" usa o perfil do painel pessoal; as outras áreas, o "Sou eu" delas.
+   */
+  function getMyShareCents(areaId: string, monthAreaBills: Bill[]): number | null {
+    const selfId =
+      areaId === HOME_AREA_ID ? (currentMember.member?.id ?? null) : areaSelf.getSelfId(areaId)
+    if (selfId === null) return null
+    return getMemberShareTotals(selfId, monthAreaBills).totalCents
+  }
   const [confirmClearExamples, setConfirmClearExamples] = useState(false)
   const [showBackup, setShowBackup] = useState(false)
   const [showAreaForm, setShowAreaForm] = useState(false)
@@ -91,16 +108,10 @@ function App() {
   )
   const canAddArea = store.areas.length < MAX_AREAS
 
-  // Indicadores das contas individuais.
+  // Resumo do mês das contas individuais.
   const individualBills = individualAreas.flatMap((area) => area.bills)
   const individualMonthTotals = getBillsTotals(
     individualBills.filter((bill) => bill.month === month),
-  )
-  // Meses anteriores ao mês atual real, não ao selecionado; contas do mês atual ficam fora.
-  const individualPreviousOverdue = getBillsTotals(
-    individualBills.filter(
-      (bill) => bill.month < today.month && getBillStatus(bill, today) === 'late',
-    ),
   )
 
   function handleCreateArea({ name }: AreaFormValues) {
@@ -109,10 +120,13 @@ function App() {
     setShowAreaForm(false)
   }
 
-  /** Contas atrasadas de meses anteriores ao selecionado (nunca entram nos totais do mês). */
-  function getOverdueBills(bills: Bill[]) {
+  /**
+   * Contas atrasadas de meses anteriores ao mês de referência (nunca entram nos totais do
+   * mês). Padrão: o mês selecionado. "Minhas contas" usa o mês atual real.
+   */
+  function getOverdueBills(bills: Bill[], referenceMonth = month) {
     return bills
-      .filter((bill) => bill.month < month && getBillStatus(bill, today) === 'late')
+      .filter((bill) => bill.month < referenceMonth && getBillStatus(bill, today) === 'late')
       .sort(
         (a, b) =>
           a.month.localeCompare(b.month) || effectiveDueDay(a) - effectiveDueDay(b),
@@ -163,6 +177,13 @@ function App() {
         onAdd={() => setMemberForm({ mode: 'new', areaId: area.id })}
         onEdit={(member) => setMemberForm({ mode: 'edit', areaId: area.id, member })}
         onDelete={(member) => setMemberToDelete({ areaId: area.id, member })}
+        selfMemberId={areaSelf.getSelfId(area.id)}
+        onToggleSelf={(member) =>
+          areaSelf.chooseSelf(
+            area.id,
+            areaSelf.getSelfId(area.id) === member.id ? null : member.id,
+          )
+        }
       />
     )
   }
@@ -224,22 +245,60 @@ function App() {
     )
   }
 
+  /**
+   * Avisos de vencimento do cabeçalho de uma área: vencidas no mês selecionado e contas que
+   * vencem nos próximos 3 dias (contando hoje). Só contas não pagas; vencidas não contam como
+   * próximas. "Minhas contas" mostra sempre; áreas compartilhadas, só abertas.
+   */
+  function renderDueNotices(bills: Bill[]) {
+    const lateCount = bills.filter(
+      (bill) => bill.month === month && getBillStatus(bill, today) === 'late',
+    ).length
+    const dueSoonCount = bills.filter((bill) => isDueSoon(bill, today)).length
+    return (
+      <>
+        {lateCount > 0 && (
+          <span className="area__notice area__notice--late">
+            {lateCount === 1 ? 'Você possui uma conta vencida.' : 'Você possui contas vencidas.'}
+          </span>
+        )}
+        {dueSoonCount > 0 && (
+          <span className="area__notice">
+            {dueSoonCount === 1
+              ? 'Você possui uma conta próxima do vencimento.'
+              : 'Você possui contas próximas do vencimento.'}
+          </span>
+        )}
+      </>
+    )
+  }
+
   /** Área criada pela pessoa: totais, pendências e atrasadas calculados só com as contas dela. */
   function renderAreaCard(area: Area) {
+    const isMyAccounts = area.id === MY_ACCOUNTS_AREA_ID
     const areaMonthBills = area.bills.filter((bill) => bill.month === month)
-    const areaOverdueBills = getOverdueBills(area.bills)
+    // "Minhas contas": referência é o mais recente entre o mês atual real e o selecionado.
+    // Assim a lista não depende de meses passados selecionados e, num mês futuro, inclui as
+    // contas do mês atual que já venceram (getBillStatus continua decidindo o atraso).
+    const referenceMonth = isMyAccounts && today.month > month ? today.month : month
+    const areaOverdueBills = getOverdueBills(area.bills, referenceMonth)
     return (
       <AreaCard
         key={area.id}
         area={area}
         monthBills={areaMonthBills}
         overdueCount={areaOverdueBills.length}
+        overdueLabel={isMyAccounts ? 'Meses anteriores' : undefined}
+        notices={renderDueNotices(area.bills)}
+        noticesWhen={isMyAccounts ? 'always' : 'expanded'}
+        myShareCents={area.type === 'shared' ? getMyShareCents(area.id, areaMonthBills) : undefined}
       >
         <MonthSummary
           bills={areaMonthBills}
           overdueBills={areaOverdueBills}
           onMarkPaid={(bill) => store.togglePaid(area.id, bill.id)}
           areaName={area.name}
+          overdueTitle={isMyAccounts ? 'Contas em atraso de meses anteriores.' : undefined}
         />
         {area.type === 'shared' && renderMembers(area, 'Participantes')}
         {renderAreaBills(area)}
@@ -289,10 +348,8 @@ function App() {
           action={
             <IndividualSummary
               monthLabel={formatMonthLabel(month).toLocaleLowerCase('pt-BR')}
-              currentMonthLabel={formatMonthLabel(today.month).toLocaleLowerCase('pt-BR')}
               monthTotalCents={individualMonthTotals.totalCents}
               monthPendingCents={individualMonthTotals.pendingCents}
-              previousOverdueCents={individualPreviousOverdue.pendingCents}
             />
           }
         >
@@ -323,11 +380,16 @@ function App() {
             memberCount={store.members.length}
             bills={monthBills}
             overdueCount={overdueBills.length}
+            overdueLabel="Meses anteriores"
+            notices={renderDueNotices(store.bills)}
+            noticesWhen="expanded"
+            myShareCents={getMyShareCents(HOME_AREA_ID, monthBills)}
           >
             <MonthSummary
               bills={monthBills}
               overdueBills={overdueBills}
               onMarkPaid={(bill) => store.togglePaid(HOME_AREA_ID, bill.id)}
+              overdueTitle="Contas em atraso de meses anteriores."
             />
 
             <FamilyMembers

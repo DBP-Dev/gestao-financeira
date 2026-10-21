@@ -9,9 +9,16 @@ interface OverdueBillsProps {
   onMarkPaid: (bill: Bill) => void
   /** Nome da área, incluído só no rótulo acessível. Sem ele, o rótulo vem do título visível. */
   areaName?: string
+  /** Título visível. Padrão: "Contas atrasadas de meses anteriores". */
+  title?: string
 }
 
-export function OverdueBills({ bills, onMarkPaid, areaName }: OverdueBillsProps) {
+export function OverdueBills({
+  bills,
+  onMarkPaid,
+  areaName,
+  title = 'Contas atrasadas de meses anteriores',
+}: OverdueBillsProps) {
   const titleId = useId()
   if (bills.length === 0) return null
 
@@ -26,7 +33,7 @@ export function OverdueBills({ bills, onMarkPaid, areaName }: OverdueBillsProps)
     >
       <div className="overdue__header">
         <h4 id={titleId} className="overdue__title">
-          ! Contas atrasadas de meses anteriores
+          {title}
         </h4>
         <p className="overdue__total">
           {bills.length === 1 ? '1 conta' : `${bills.length} contas`} ·{' '}

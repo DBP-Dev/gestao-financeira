@@ -158,7 +158,7 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
 
           {restore.status === 'error' && (
             <div className="backup-message backup-message--error" role="alert">
-              <strong>! Não foi possível usar este arquivo.</strong>
+              <strong>Não foi possível usar este arquivo.</strong>
               <span>{restore.message}</span>
               <span>Seus dados atuais continuam como estavam.</span>
             </div>
@@ -182,7 +182,7 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
                 </li>
               </ul>
               <p className="backup-confirm__warning">
-                ! Todos os dados que estão no aplicativo agora serão apagados e trocados pelos
+                Todos os dados que estão no aplicativo agora serão apagados e trocados pelos
                 dados deste backup. Se quiser, baixe um backup dos dados atuais antes.
               </p>
               <div className="backup-confirm__actions">

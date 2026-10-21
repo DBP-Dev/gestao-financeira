@@ -481,20 +481,12 @@
   margin: 0;
 }
 
-.individual-summary__month,
-.individual-summary__overdue {
+.individual-summary__month {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
   text-align: right;
-}
-
-/* Separado dos valores do mês: não deve ser somado a eles. */
-.individual-summary__overdue {
-  max-width: 15rem;
-  padding-left: 20px;
-  border-left: 1px solid var(--border);
 }
 
 .individual-summary__item {
@@ -516,8 +508,7 @@
   font-size: 0.82rem;
 }
 
-.individual-summary__total,
-.individual-summary__overdue-value {
+.individual-summary__total {
   font-size: 1.35rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -529,16 +520,6 @@
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-.individual-summary__overdue--late .individual-summary__overdue-value {
-  color: var(--danger);
-}
-
-.individual-summary__hint {
-  color: var(--text-soft);
-  font-size: 0.76rem;
-  line-height: 1.35;
 }
 
 .account-group__empty {
@@ -613,6 +594,25 @@
 .area__figures {
   display: flex;
   gap: 24px;
+}
+
+/* Avisos de "Minhas contas" recolhida, no lugar de total e pendente. */
+.area__notices {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+
+.area__notice {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.area__notice--late {
+  color: var(--danger);
 }
 
 .area__figure {
@@ -907,6 +907,15 @@
 
 .link-button--danger {
   color: var(--danger);
+}
+
+/* Participante marcado como "eu" na área: destaque discreto no cartão e no botão. */
+.member-card--self {
+  border-color: var(--accent-border);
+}
+
+.link-button--self[aria-pressed='true'] {
+  color: var(--accent);
 }
 
 .link-button--danger:hover {
@@ -1303,10 +1312,6 @@
   font-weight: 600;
 }
 
-.field__error::before {
-  content: '! ';
-}
-
 .field__error--inline {
   font-size: 0.8rem;
 }
@@ -1697,32 +1702,19 @@ select.input option {
     padding: 18px 16px;
   }
 
-  /* Indicadores ocupam a largura toda, alinhados à esquerda, um bloco abaixo do outro. */
+  /* O resumo do mês ocupa a largura toda, alinhado à esquerda, abaixo do nome. */
   .account-group--individual .account-group__action {
     flex: 1 1 100%;
     min-width: 0;
   }
 
-  .individual-summary {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .individual-summary__month,
-  .individual-summary__overdue {
+  .individual-summary__month {
     align-items: flex-start;
     text-align: left;
   }
 
   .individual-summary__item--inline {
     justify-content: flex-start;
-  }
-
-  .individual-summary__overdue {
-    max-width: none;
-    padding: 10px 0 0;
-    border-left: none;
-    border-top: 1px solid var(--border);
   }
 
   /*
@@ -1762,6 +1754,13 @@ select.input option {
     order: 3;
     flex: 1 1 100%;
     justify-content: space-between;
+  }
+
+  .area__notices {
+    order: 3;
+    flex: 1 1 100%;
+    align-items: flex-start;
+    text-align: left;
   }
 
   .area__figure:first-child {

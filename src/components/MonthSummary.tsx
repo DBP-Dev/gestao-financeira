@@ -10,9 +10,17 @@ interface MonthSummaryProps {
   onMarkPaid: (bill: Bill) => void
   /** Nome da área, incluído só nos rótulos acessíveis. Sem ele, os rótulos ficam como antes. */
   areaName?: string
+  /** Título do alerta de contas atrasadas. Sem ele, o alerta usa o título padrão. */
+  overdueTitle?: string
 }
 
-export function MonthSummary({ bills, overdueBills, onMarkPaid, areaName }: MonthSummaryProps) {
+export function MonthSummary({
+  bills,
+  overdueBills,
+  onMarkPaid,
+  areaName,
+  overdueTitle,
+}: MonthSummaryProps) {
   const {
     totalCents: total,
     paidCents: paid,
@@ -57,7 +65,12 @@ export function MonthSummary({ bills, overdueBills, onMarkPaid, areaName }: Mont
           </span>
         </div>
       )}
-      <OverdueBills bills={overdueBills} onMarkPaid={onMarkPaid} areaName={areaName} />
+      <OverdueBills
+        bills={overdueBills}
+        onMarkPaid={onMarkPaid}
+        areaName={areaName}
+        title={overdueTitle}
+      />
     </section>
   )
 }

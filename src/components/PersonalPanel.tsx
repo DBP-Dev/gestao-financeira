@@ -39,7 +39,7 @@ export function PersonalPanel({
           Meu painel
         </h2>
         <p className="personal-panel__hint">
-          ! Não encontramos o integrante “Eu” nos dados. Escolha quem é você para ver a sua parte
+          Não encontramos o integrante “Eu” nos dados. Escolha quem é você para ver a sua parte
           das contas. Essa escolha fica salva só neste aparelho.
         </p>
         <div className="field personal-panel__choose">
