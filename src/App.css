@@ -260,13 +260,14 @@
 
 .personal-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
-    'identity areas totals'
-    'distribution distribution distribution';
-  align-items: center;
-  gap: 18px 24px;
-  padding: 20px;
+    'identity identity'
+    'share totals'
+    'notes notes';
+  align-items: end;
+  gap: 10px 24px;
+  padding: 18px 20px;
   border-radius: var(--radius-lg);
   background: var(--surface);
   border: 1px solid var(--border);
@@ -283,18 +284,21 @@
   grid-area: identity;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
-}
-
-.personal-panel__identity .avatar--large {
-  margin-bottom: 0;
 }
 
 .personal-panel__title {
   font-size: 1.2rem;
   font-weight: 650;
   overflow-wrap: anywhere;
+}
+
+/* Com perfil, o nome é só uma identificação discreta. */
+.personal-panel__identity .personal-panel__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-soft);
 }
 
 .personal-panel__hint {
@@ -306,43 +310,30 @@
   max-width: 320px;
 }
 
-.personal-panel__areas {
-  grid-area: areas;
+.personal-panel__share {
+  grid-area: share;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: 2px;
+  min-width: 0;
 }
 
-.personal-area {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 12px;
-  padding: 10px 12px;
-  border-radius: var(--radius);
-  background: var(--surface-raised);
+.personal-panel__label {
+  font-size: 0.85rem;
+  color: var(--text-soft);
 }
 
-.personal-area__name {
-  flex: 1;
-  font-weight: 600;
-  /* O nome da área fica em uma linha; se faltar espaço, valor e etiqueta descem. */
-  white-space: nowrap;
-}
-
-.personal-area__total {
+.personal-panel__share-value {
+  font-size: 2rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .personal-panel__totals {
   grid-area: totals;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
+  gap: 24px;
   margin: 0;
 }
 
@@ -357,62 +348,93 @@
 
 .personal-panel__total dd {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.personal-panel__total--pending dd {
-  font-size: 1.15rem;
-}
-
-.personal-panel__distribution {
-  grid-area: distribution;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.segmented-bar {
-  display: flex;
-  gap: 2px;
-  height: 12px;
-  border-radius: 999px;
-  background: var(--surface-hover);
-  overflow: hidden;
-}
-
-.segmented-bar__segment {
-  flex-basis: 0;
-  min-width: 4px;
-}
-
-.segmented-bar__segment--familia {
-  background: var(--area-familia);
-}
-
-.legend {
+.personal-panel__notes {
+  grid-area: notes;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.personal-panel__notes .personal-panel__hint,
+.personal-panel__grand-total {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.personal-panel__grand-total strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Alertas do painel: em atraso e próximas do vencimento, acima do total geral. */
+.personal-panel__alerts {
+  flex-basis: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 10px 24px;
+  margin-bottom: 4px;
+}
+
+.personal-alerts {
+  min-width: 0;
+}
+
+.personal-alerts__title {
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.personal-alerts--late .personal-alerts__title {
+  color: var(--danger);
+}
+
+.personal-alerts__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
   font-size: 0.88rem;
+}
+
+.personal-alerts__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+.personal-alerts__bill {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.personal-alerts__area {
   color: var(--text-soft);
 }
 
-.legend__item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.personal-alerts__date {
+  flex-shrink: 0;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
 }
 
-.legend__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.personal-alerts__more {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: var(--text-soft);
 }
 
 /* ---------- Boxes de contas (individuais / compartilhadas) ---------- */
@@ -595,12 +617,6 @@
 .area__meta {
   color: var(--text-soft);
   font-size: 0.9rem;
-}
-
-.area__overdue {
-  align-self: flex-start;
-  margin-top: 4px;
-  white-space: normal;
 }
 
 .area__figures {
@@ -1729,14 +1745,6 @@ select.input option {
 /* ---------- Responsivo ---------- */
 
 @media (max-width: 860px) {
-  .personal-panel {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      'identity totals'
-      'areas areas'
-      'distribution distribution';
-  }
-
   .members {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -1775,9 +1783,10 @@ select.input option {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       'identity'
+      'share'
       'totals'
-      'areas'
-      'distribution';
+      'notes';
+    align-items: stretch;
     padding: 16px;
   }
 

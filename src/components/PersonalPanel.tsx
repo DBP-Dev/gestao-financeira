@@ -1,31 +1,32 @@
 import { useId } from 'react'
-import type { Bill, Member } from '../types'
+import type { Member, Today } from '../types'
+import { formatAlertDate, visibleAlerts, type DueAlert, type DueAlerts } from '../utils/dueAlerts'
 import { formatBRL } from '../utils/money'
-import { getMemberShareTotals } from '../utils/personal'
+import type { PersonalMonthSummary } from '../utils/personal'
 import { Avatar } from './Avatar'
 
 interface PersonalPanelProps {
-  /** Contas do mês selecionado (mesma lista usada pela Área Família). */
-  bills: Bill[]
+  /** Resumo do mês selecionado (getPersonalMonthSummary); null enquanto não há perfil. */
+  summary: PersonalMonthSummary | null
+  /** Contas em atraso e próximas do vencimento (getDueAlerts); null enquanto não há perfil. */
+  alerts: DueAlerts | null
+  /** Data de hoje, para mostrar o ano só quando o vencimento é de outro ano. */
+  today: Today
   members: Member[]
-  monthName: string
   /** Integrante atual (useCurrentMember), ou null quando ainda não foi escolhido. */
   member: Member | null
   onChooseMember: (id: string) => void
 }
 
-interface PersonalArea {
-  id: string
-  label: string
-  totalCents: number
-  pendingCents: number
-}
-
-/** Cartão com a parte do integrante atual nas contas do mês. Somente leitura. */
+/**
+ * Cartão com a sua parte nas contas do mês (o mês já aparece no cabeçalho). Somente
+ * leitura. Sem perfil, pede para escolher quem é você.
+ */
 export function PersonalPanel({
-  bills,
+  summary,
+  alerts,
+  today,
   members,
-  monthName,
   member,
   onChooseMember,
 }: PersonalPanelProps) {
@@ -68,84 +69,91 @@ export function PersonalPanel({
     )
   }
 
-  const family = getMemberShareTotals(member.id, bills)
-  // Por enquanto só existe a Área Família; novas áreas entrarão nesta lista.
-  const areas: PersonalArea[] = [{ id: 'familia', label: 'Gastos da casa', ...family }]
-  const totalCents = areas.reduce((sum, area) => sum + area.totalCents, 0)
-  const pendingCents = areas.reduce((sum, area) => sum + area.pendingCents, 0)
-  const barLabel =
-    totalCents > 0
-      ? `Distribuição da sua parte: ${areas
-          .map((area) => `${area.label} ${formatBRL(area.totalCents)}`)
-          .join(', ')}`
-      : 'Nenhuma conta sua neste mês'
+  if (!summary) return null
+
+  const message =
+    summary.monthTotalCents === 0
+      ? 'Nenhuma conta neste mês.'
+      : summary.shareCents === 0
+        ? 'Nenhuma conta sua neste mês.'
+        : null
+  const hasAlerts = alerts !== null && (alerts.overdue.length > 0 || alerts.dueSoon.length > 0)
 
   return (
     <section className="personal-panel" aria-labelledby={titleId}>
       <div className="personal-panel__identity">
-        <Avatar member={member} size="large" />
-        <div>
-          <h2 id={titleId} className="personal-panel__title">
-            Meu painel · {member.name}
-          </h2>
-          <p className="personal-panel__hint">Sua parte das contas de {monthName}</p>
-        </div>
+        <Avatar member={member} size="small" />
+        <h2 id={titleId} className="personal-panel__title">
+          {member.name}
+        </h2>
       </div>
 
-      <ul className="personal-panel__areas">
-        {areas.map((area) => (
-          <li key={area.id} className="personal-area">
-            <span className="personal-area__name">{area.label}</span>
-            <strong className="personal-area__total">{formatBRL(area.totalCents)}</strong>
-            {area.totalCents === 0 ? (
-              <span className="member-card__muted">Sem contas suas</span>
-            ) : area.pendingCents === 0 ? (
-              <span className="tag tag--paid">✓ Tudo pago</span>
-            ) : (
-              <span className="tag tag--pending">○ Falta {formatBRL(area.pendingCents)}</span>
-            )}
-          </li>
-        ))}
-      </ul>
+      <div className="personal-panel__share">
+        <span className="personal-panel__label">Sua parte</span>
+        <strong className="personal-panel__share-value">{formatBRL(summary.shareCents)}</strong>
+      </div>
 
       <dl className="personal-panel__totals">
         <div className="personal-panel__total">
-          <dt>Meu total</dt>
-          <dd>{formatBRL(totalCents)}</dd>
+          <dt>Pago</dt>
+          <dd>{formatBRL(summary.paidCents)}</dd>
         </div>
         <div className="personal-panel__total personal-panel__total--pending">
           <dt>Pendente</dt>
-          <dd>{formatBRL(pendingCents)}</dd>
+          <dd>{formatBRL(summary.pendingCents)}</dd>
         </div>
       </dl>
 
-      <div className="personal-panel__distribution">
-        <div className="segmented-bar" role="img" aria-label={barLabel}>
-          {totalCents > 0 &&
-            areas
-              .filter((area) => area.totalCents > 0)
-              .map((area) => (
-                <span
-                  key={area.id}
-                  className={`segmented-bar__segment segmented-bar__segment--${area.id}`}
-                  // A largura é proporcional aos centavos, sem arredondar porcentagens.
-                  style={{ flexGrow: area.totalCents }}
-                />
-              ))}
-        </div>
-        {totalCents === 0 ? (
-          <p className="personal-panel__hint">Nenhuma conta sua em {monthName}.</p>
-        ) : (
-          <ul className="legend" aria-hidden="true">
-            {areas.map((area) => (
-              <li key={area.id} className="legend__item">
-                <span className={`legend__dot segmented-bar__segment--${area.id}`} />
-                {area.label}
-              </li>
-            ))}
-          </ul>
+      <div className="personal-panel__notes">
+        {hasAlerts && (
+          <div className="personal-panel__alerts">
+            <AlertSection title="Contas em atraso" items={alerts.overdue} today={today} late />
+            <AlertSection title="Próximas do vencimento" items={alerts.dueSoon} today={today} />
+          </div>
         )}
+        {message && <p className="personal-panel__hint">{message}</p>}
+        <p className="personal-panel__grand-total">
+          Total de todas as contas do mês: <strong>{formatBRL(summary.monthTotalCents)}</strong>
+        </p>
       </div>
+    </section>
+  )
+}
+
+/** Uma seção de alertas: só aparece com itens; mostra até três e conta os demais. */
+function AlertSection({
+  title,
+  items,
+  today,
+  late = false,
+}: {
+  title: string
+  items: DueAlert[]
+  today: Today
+  late?: boolean
+}) {
+  const titleId = useId()
+  if (items.length === 0) return null
+  const { shown, hidden } = visibleAlerts(items)
+  return (
+    <section
+      className={late ? 'personal-alerts personal-alerts--late' : 'personal-alerts'}
+      aria-labelledby={titleId}
+    >
+      <h3 id={titleId} className="personal-alerts__title">
+        {title}
+      </h3>
+      <ul className="personal-alerts__list">
+        {shown.map((item) => (
+          <li key={`${item.areaId}:${item.billId}`} className="personal-alerts__item">
+            <span className="personal-alerts__bill">
+              <span className="personal-alerts__area">{item.areaName}</span> · {item.billName}
+            </span>
+            <span className="personal-alerts__date">{formatAlertDate(item, today)}</span>
+          </li>
+        ))}
+      </ul>
+      {hidden > 0 && <p className="personal-alerts__more">e mais {hidden}</p>}
     </section>
   )
 }

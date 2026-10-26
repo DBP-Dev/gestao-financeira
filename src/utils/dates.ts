@@ -78,6 +78,18 @@ export function getBillStatus(bill: Bill, today: Today): BillStatus {
   return isPastMonth || isPastDayThisMonth ? 'late' : 'pending'
 }
 
+/**
+ * Próximo dia útil depois de hoje, pela data local: de segunda a quinta, o dia seguinte;
+ * na sexta, no sábado ou no domingo, a segunda-feira. Feriados não são considerados.
+ */
+export function nextBusinessDay(today: Today): Today {
+  const { year, month } = parseMonthKey(today.month)
+  const date = new Date(year, month - 1, today.day + 1)
+  // 0 = domingo, 6 = sábado.
+  while (date.getDay() === 0 || date.getDay() === 6) date.setDate(date.getDate() + 1)
+  return { month: monthKeyFromDate(date), day: date.getDate() }
+}
+
 /** Dias corridos de hoje até o vencimento (0 = vence hoje; negativo = já venceu). */
 export function daysUntilDue(bill: Bill, today: Today): number {
   const due = parseMonthKey(bill.month)

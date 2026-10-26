@@ -11,10 +11,6 @@ interface FamilyAreaProps {
   memberCount?: number
   /** Contas do mês selecionado (mesma lista usada pelo resumo completo). */
   bills: Bill[]
-  /** Quantidade de contas atrasadas de meses anteriores (mesma lista do alerta completo). */
-  overdueCount: number
-  /** Texto da etiqueta de atraso. Padrão: a quantidade ("2 contas atrasadas"). */
-  overdueLabel?: string
   /** Avisos de vencimento exibidos no lugar de total e pendente do cabeçalho (pode ser vazio). */
   notices?: ReactNode
   /**
@@ -41,8 +37,6 @@ export function FamilyArea({
   meta,
   memberCount = 0,
   bills,
-  overdueCount,
-  overdueLabel,
   notices,
   noticesWhen = 'always',
   myShareCents,
@@ -69,12 +63,6 @@ export function FamilyArea({
             <span className="area__meta">
               {meta ?? (memberCount === 1 ? '1 membro' : `${memberCount} membros`)}
             </span>
-            {overdueCount > 0 && (
-              <span className="tag tag--late area__overdue">
-                {overdueLabel ??
-                  (overdueCount === 1 ? '1 conta atrasada' : `${overdueCount} contas atrasadas`)}
-              </span>
-            )}
           </span>
           {showNotices ? (
             <span className="area__notices">{notices}</span>

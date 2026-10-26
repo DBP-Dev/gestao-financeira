@@ -914,3 +914,255 @@ describe('virada do mês com o app aberto', () => {
     expect(january[0]).toContain('Prevista')
   })
 })
+
+describe('painel pessoal: sua parte em todas as áreas do mês', () => {
+  const AREA_SELF_KEY = 'gestao-financeira:perfil-areas:v1'
+  const half = (eu: number, h2: number) => [
+    { memberId: 'eu', amountCents: eu },
+    { memberId: 'h2', amountCents: h2 },
+  ]
+
+  /**
+   * Outubro: casa (paga 50/50, pendente 50,01/50,00 e academia paga), "Minhas contas"
+   * (120,00 paga e 30,00 pendente), Viagem com "Sou eu" = Edu (60,00 de 90,00, pendente)
+   * e Obra sem "Sou eu" (200,00 paga). Novembro: só a academia prevista.
+   */
+  function panelData(): FinanceData {
+    const base = data()
+    base.areas[0].members = [member('eu', 'Eu'), member('h2', 'Bia')]
+    base.areas[0].series = [{
+      id: 's-ac', kind: 'recurring', startMonth: '2026-10', skippedMonths: [],
+      versions: [{ fromMonth: '2026-10', name: 'Academia', totalCents: 5000, dueDay: 10, shares: half(2500, 2500) }],
+    }]
+    base.areas[0].bills = [
+      { id: 'c1', name: 'Luz', month: '2026-10', totalCents: 10000, dueDay: 5, shares: half(5000, 5000), paid: true },
+      { id: 'c2', name: 'Água', month: '2026-10', totalCents: 10001, dueDay: 8, shares: half(5001, 5000), paid: false },
+      {
+        id: 'ac10', name: 'Academia', month: '2026-10', totalCents: 5000, dueDay: 10, shares: half(2500, 2500),
+        paid: true, seriesId: 's-ac',
+      },
+    ]
+    base.areas[1].bills = [
+      { id: 'm1', name: 'Internet', month: '2026-10', totalCents: 12000, dueDay: 10, shares: [], paid: true },
+      { id: 'm2', name: 'Celular', month: '2026-10', totalCents: 3000, dueDay: 12, shares: [], paid: false },
+    ]
+    base.areas.push(
+      {
+        id: 'viagem', name: 'Viagem', type: 'shared',
+        members: [member('v1', 'Dani'), member('v2', 'Edu')],
+        bills: [{
+          id: 'v-hotel', name: 'Hotel', month: '2026-10', totalCents: 9000, dueDay: 3,
+          shares: [{ memberId: 'v1', amountCents: 3000 }, { memberId: 'v2', amountCents: 6000 }], paid: false,
+        }],
+        series: [],
+      },
+      {
+        id: 'obra', name: 'Obra', type: 'shared', members: [member('o1', 'Gil')],
+        bills: [{
+          id: 'o-cimento', name: 'Cimento', month: '2026-10', totalCents: 20000, dueDay: 1,
+          shares: [{ memberId: 'o1', amountCents: 20000 }], paid: true,
+        }],
+        series: [],
+      },
+    )
+    return base
+  }
+
+  const panelText = () => (document.querySelector('.personal-panel')?.textContent ?? '').replace(/\s+/g, ' ')
+  /** "Total do mês" e "Minha parte" dos cabeçalhos das áreas, na ordem da tela. */
+  const areaFigures = () =>
+    [...document.querySelectorAll('.area__figure')].map((figure) => (figure.textContent ?? '').replace(/\s+/g, ' '))
+
+  async function openApp(initial: FinanceData, selfChoices: Record<string, string> = { viagem: 'v2' }) {
+    localStorage.setItem(KEY, JSON.stringify(initial))
+    localStorage.setItem(AREA_SELF_KEY, JSON.stringify(selfChoices))
+    render(<App />)
+    await settle()
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 9, 22, 12))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('soma casa, "Minhas contas" e a área com "Sou eu"; área sem "Sou eu" só no total geral', async () => {
+    await openApp(panelData())
+    const text = panelText()
+    // "Eu" ativo tem prioridade sobre o perfil salvo (Bia).
+    expect(document.querySelector('.personal-panel h2')?.textContent).toBe('Eu')
+    // Casa 50,00 + 50,01 + 25,00; Minhas contas 150,00; Viagem 60,00.
+    expect(text).toMatch(/Sua parte\s*R\$\s*335,01/)
+    // Pago: 50,00 + 25,00 + 120,00. Pendente: 50,01 + 30,00 + 60,00.
+    expect(text).toMatch(/Pago\s*R\$\s*195,00/)
+    expect(text).toMatch(/Pendente\s*R\$\s*140,01/)
+    // 250,01 (casa) + 150,00 + 90,00 + 200,00 (Obra, sem "Sou eu").
+    expect(text).toMatch(/Total de todas as contas do mês:\s*R\$\s*690,01/)
+  })
+
+  it('preserva os outros resumos: individual e "Minha parte" de cada área', async () => {
+    await openApp(panelData())
+    const individual = (document.querySelector('.individual-summary')?.textContent ?? '').replace(/\s+/g, ' ')
+    expect(individual).toMatch(/Total de outubro de 2026\s*R\$\s*150,00/)
+    expect(individual).toMatch(/Pendente de outubro de 2026\s*R\$\s*30,00/)
+    const figures = areaFigures()
+    // Casa: total 250,01 e minha parte 125,01; Viagem: 90,00 e 60,00; Obra: 200,00 e "—".
+    expect(figures).toEqual(expect.arrayContaining([
+      expect.stringMatching(/Total do mês\s*R\$\s*250,01/),
+      expect.stringMatching(/Minha parte\s*R\$\s*125,01/),
+      expect.stringMatching(/Total do mês\s*R\$\s*90,00/),
+      expect.stringMatching(/Minha parte\s*R\$\s*60,00/),
+      expect.stringMatching(/Total do mês\s*R\$\s*200,00/),
+      expect.stringMatching(/Minha parte\s*—/),
+    ]))
+  })
+
+  it('mês seguinte: só a recorrente prevista, inteira no pendente', async () => {
+    await openApp(panelData())
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo mês' }))
+    const text = panelText()
+    expect(text).toMatch(/Sua parte\s*R\$\s*25,00/)
+    expect(text).toMatch(/Pago\s*R\$\s*0,00/)
+    expect(text).toMatch(/Pendente\s*R\$\s*25,00/)
+    expect(text).toMatch(/Total de todas as contas do mês:\s*R\$\s*50,00/)
+  })
+
+  it('mês sem nenhuma conta e mês só com contas de outros', async () => {
+    const onlyOthers = panelData()
+    onlyOthers.areas[0].series = []
+    onlyOthers.areas[0].bills = []
+    onlyOthers.areas[1].bills = []
+    await openApp(onlyOthers, {})
+    // Outubro: só Viagem (sem "Sou eu") e Obra têm contas.
+    expect(panelText()).toContain('Nenhuma conta sua neste mês.')
+    expect(panelText()).toMatch(/Sua parte\s*R\$\s*0,00/)
+    expect(panelText()).toMatch(/Total de todas as contas do mês:\s*R\$\s*290,00/)
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo mês' }))
+    expect(panelText()).toContain('Nenhuma conta neste mês.')
+    expect(panelText()).toMatch(/Total de todas as contas do mês:\s*R\$\s*0,00/)
+  })
+
+  it('perfil salvo apontando para desativado (sem "Eu"): mostra o seletor, sem resumo', async () => {
+    const initial = panelData()
+    initial.areas[0].members = [member('h1', 'Ana'), { ...member('h2', 'Bia'), inactive: true }]
+    initial.areas[0].series = []
+    initial.areas[0].bills = []
+    await openApp(initial)
+    expect(screen.getByLabelText('Quem é você?')).toBeTruthy()
+    expect(panelText()).not.toContain('Sua parte')
+    // Sem perfil, também não há alertas.
+    expect(document.querySelector('.personal-panel__alerts')).toBeNull()
+  })
+})
+
+describe('painel pessoal: alertas de atraso e de vencimento próximo', () => {
+  const AREA_SELF_KEY = 'gestao-financeira:perfil-areas:v1'
+  const eu = (amountCents: number) => [{ memberId: 'eu', amountCents }]
+
+  /**
+   * Hoje é sexta, 30/10/2026: o próximo dia útil é segunda, 02/11.
+   * Casa: Gás (setembro, pendente) atrasada, Água (setembro, paga) fora, Luz (31/10) próxima.
+   * Minhas contas: Internet recorrente a partir de novembro, prevista para 02/11.
+   * Viagem ("Sou eu" = Edu): Hotel atrasado; Passeio (setembro) só da Dani, fora dos alertas
+   *   mas na lista de atrasadas da área (antes, também na etiqueta "1 conta atrasada").
+   * Obra (sem "Sou eu"): Cimento atrasado, fora.
+   */
+  function alertData(): FinanceData {
+    const base = data()
+    base.areas[0].members = [member('eu', 'Eu'), member('h2', 'Bia')]
+    base.areas[0].bills = [
+      { id: 'gas', name: 'Gás', month: '2026-09', totalCents: 8000, dueDay: 5, shares: eu(8000), paid: false },
+      { id: 'agua', name: 'Água', month: '2026-09', totalCents: 6000, dueDay: 8, shares: eu(6000), paid: true },
+      { id: 'luz', name: 'Luz', month: '2026-10', totalCents: 9000, dueDay: 31, shares: eu(9000), paid: false },
+    ]
+    base.areas[1].series = [{
+      id: 's-net', kind: 'recurring', startMonth: '2026-11', skippedMonths: [],
+      versions: [{ fromMonth: '2026-11', name: 'Internet', totalCents: 12000, dueDay: 2, shares: [] }],
+    }]
+    base.areas.push(
+      {
+        id: 'viagem', name: 'Viagem', type: 'shared', members: [member('v1', 'Dani'), member('v2', 'Edu')],
+        bills: [
+          {
+            id: 'hotel', name: 'Hotel', month: '2026-10', totalCents: 9000, dueDay: 20, paid: false,
+            shares: [{ memberId: 'v2', amountCents: 9000 }],
+          },
+          {
+            id: 'passeio', name: 'Passeio', month: '2026-09', totalCents: 3000, dueDay: 30, paid: false,
+            shares: [{ memberId: 'v1', amountCents: 3000 }],
+          },
+        ],
+        series: [],
+      },
+      {
+        id: 'obra', name: 'Obra', type: 'shared', members: [member('o1', 'Gil')],
+        bills: [{
+          id: 'cimento', name: 'Cimento', month: '2026-10', totalCents: 20000, dueDay: 1, paid: false,
+          shares: [{ memberId: 'o1', amountCents: 20000 }],
+        }],
+        series: [],
+      },
+    )
+    return base
+  }
+
+  const items = (title: string) =>
+    [...(screen.queryByRole('region', { name: title })?.querySelectorAll('li') ?? [])].map((item) =>
+      (item.textContent ?? '').replace(/\s+/g, ' '),
+    )
+
+  async function openApp() {
+    localStorage.setItem(KEY, JSON.stringify(alertData()))
+    localStorage.setItem(AREA_SELF_KEY, JSON.stringify({ viagem: 'v2' }))
+    render(<App />)
+    await settle()
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 9, 30, 12))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('só as contas de "Sua parte", com área, conta e data; não depende do mês selecionado', async () => {
+    await openApp()
+    const expectedLate = ['Gastos da casa · Gás5 de setembro', 'Viagem · Hotel20 de outubro']
+    const expectedSoon = ['Gastos da casa · Luz31 de outubro', 'Minhas contas · Internet2 de novembro']
+    expect(items('Contas em atraso')).toEqual(expectedLate)
+    expect(items('Próximas do vencimento')).toEqual(expectedSoon)
+    // Outro mês selecionado: os alertas continuam os mesmos.
+    fireEvent.click(screen.getByRole('button', { name: 'Mês anterior' }))
+    expect(items('Contas em atraso')).toEqual(expectedLate)
+    expect(items('Próximas do vencimento')).toEqual(expectedSoon)
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo mês' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo mês' }))
+    expect(items('Próximas do vencimento')).toEqual(expectedSoon)
+  })
+
+  it('sem etiquetas de atraso nas áreas; a lista de atrasadas e os avisos continuam', async () => {
+    await openApp()
+    expect(document.querySelector('.area__overdue')).toBeNull()
+    expect(screen.queryByText('Meses anteriores')).toBeNull()
+    expect(screen.queryByText(/contas? atrasadas?$/)).toBeNull()
+    document.querySelectorAll<HTMLButtonElement>('button[aria-expanded="false"]').forEach((button) => {
+      fireEvent.click(button)
+    })
+    // A lista de atrasadas de meses anteriores da casa continua com a Gás.
+    const overdueList = screen.getAllByText('Contas em atraso de meses anteriores.')
+    expect(overdueList.length).toBeGreaterThan(0)
+    expect(overdueList[0].closest('section')?.textContent).toContain('Gás')
+    // A lista de atrasadas da Viagem continua com o Passeio, de todas as pessoas da área.
+    const tripOverdue = [...document.querySelectorAll('section')].find(
+      (section) => section.textContent?.includes('Passeio') && section.querySelector('h4, h5'),
+    )
+    expect(tripOverdue).toBeTruthy()
+    // Aviso do cabeçalho da casa, com a janela atual (3 dias corridos), sem mudança.
+    expect(screen.getAllByText('Você possui uma conta próxima do vencimento.').length).toBeGreaterThan(0)
+  })
+})

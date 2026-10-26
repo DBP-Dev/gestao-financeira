@@ -7,10 +7,6 @@ interface AreaCardProps {
   area: Area
   /** Contas desta área no mês selecionado (para total e pendente do cabeçalho). */
   monthBills: Bill[]
-  /** Contas atrasadas de meses anteriores desta área. */
-  overdueCount: number
-  /** Texto da etiqueta de atraso. Sem ele, mostra a quantidade de contas atrasadas. */
-  overdueLabel?: string
   /** Avisos de vencimento exibidos no lugar de total e pendente do cabeçalho. */
   notices?: ReactNode
   /** Quando os avisos aparecem: "always" ou só com a área aberta ("expanded"). */
@@ -33,8 +29,6 @@ function describeArea(area: Area): string {
 export function AreaCard({
   area,
   monthBills,
-  overdueCount,
-  overdueLabel,
   notices,
   noticesWhen,
   myShareCents,
@@ -45,8 +39,6 @@ export function AreaCard({
       name={area.name}
       meta={describeArea(area)}
       bills={monthBills}
-      overdueCount={overdueCount}
-      overdueLabel={overdueLabel}
       notices={notices}
       noticesWhen={noticesWhen}
       myShareCents={myShareCents}

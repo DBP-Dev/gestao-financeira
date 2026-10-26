@@ -35,7 +35,8 @@ import {
   getHomeArea,
 } from './utils/areas'
 import { getBillsTotals } from './utils/billTotals'
-import { getMemberShareTotals } from './utils/personal'
+import { getDueAlerts } from './utils/dueAlerts'
+import { getMemberShareTotals, getPersonalMonthSummary } from './utils/personal'
 import {
   PAID_OCCURRENCE_DELETE_MESSAGE,
   billsForMonth,
@@ -236,6 +237,22 @@ function App() {
 
   // Resumo do mês das contas individuais (inclui as previstas).
   const individualMonthTotals = getBillsTotals(individualAreas.flatMap(monthBillsOf))
+
+  // Painel pessoal (só com perfil): sua parte em todas as áreas do mês e o total geral.
+  // "Gastos da casa" usa o perfil; as outras compartilhadas, o "Sou eu" delas.
+  const personalSelfId = (area: Area) =>
+    area.id === HOME_AREA_ID ? (currentMember.member?.id ?? null) : areaSelf.getSelfId(area.id)
+  const personalSummary = currentMember.member
+    ? getPersonalMonthSummary(
+        store.areas.map((area) => ({ area, bills: monthBillsOf(area) })),
+        personalSelfId,
+      )
+    : null
+  // Alertas do painel: as mesmas contas de "Sua parte", pela data de hoje (não pelo mês
+  // selecionado). Só com perfil, como o resumo.
+  const personalAlerts = currentMember.member
+    ? getDueAlerts(store.areas, today, personalSelfId)
+    : null
 
   function handleCreateArea({ name }: AreaFormValues) {
     store.addArea(name)
@@ -546,8 +563,6 @@ function App() {
         key={area.id}
         area={area}
         monthBills={areaMonthBills}
-        overdueCount={areaOverdueBills.length}
-        overdueLabel={isMyAccounts ? 'Meses anteriores' : undefined}
         notices={renderDueNotices(area.bills)}
         noticesWhen={isMyAccounts ? 'always' : 'expanded'}
         myShareCents={area.type === 'shared' ? getMyShareCents(area.id, areaMonthBills) : undefined}
@@ -632,9 +647,10 @@ function App() {
         )}
 
         <PersonalPanel
-          bills={monthBills}
+          summary={personalSummary}
+          alerts={personalAlerts}
+          today={today}
           members={store.members}
-          monthName={formatMonthName(month)}
           member={currentMember.member}
           onChooseMember={currentMember.chooseMember}
         />
@@ -697,8 +713,6 @@ function App() {
           <FamilyArea
             memberCount={store.members.length}
             bills={monthBills}
-            overdueCount={overdueBills.length}
-            overdueLabel="Meses anteriores"
             notices={renderDueNotices(store.bills)}
             noticesWhen="expanded"
             myShareCents={getMyShareCents(HOME_AREA_ID, monthBills)}
