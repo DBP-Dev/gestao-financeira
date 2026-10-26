@@ -43,6 +43,23 @@ export function formatMonthName(key: MonthKey): string {
   )
 }
 
+const SHORT_MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+/**
+ * Lista curta de meses, na ordem recebida: até 3 meses, todos ("jan, fev, mar"); mais
+ * que isso, os 3 primeiros, quantos faltam e o total ("jan, fev, mar e mais 4 (7 meses)").
+ * O ano só aparece quando a lista atravessa anos diferentes ("nov 2026, dez 2026, ...").
+ */
+export function formatMonthList(months: MonthKey[]): string {
+  const withYear = new Set(months.map((key) => parseMonthKey(key).year)).size > 1
+  const label = (key: MonthKey) => {
+    const { year, month } = parseMonthKey(key)
+    return withYear ? `${SHORT_MONTHS[month - 1]} ${year}` : SHORT_MONTHS[month - 1]
+  }
+  if (months.length <= 3) return months.map(label).join(', ')
+  return `${months.slice(0, 3).map(label).join(', ')} e mais ${months.length - 3} (${months.length} meses)`
+}
+
 /** Dia de vencimento ajustado ao tamanho do mês (ex.: dia 31 em fevereiro vira 28). */
 export function effectiveDueDay(bill: Bill): number {
   return Math.min(bill.dueDay, daysInMonth(bill.month))
