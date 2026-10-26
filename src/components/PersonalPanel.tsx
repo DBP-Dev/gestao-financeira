@@ -57,7 +57,7 @@ export function PersonalPanel({
             <option value="" disabled>
               Escolha um integrante
             </option>
-            {members.map((option) => (
+            {members.filter((option) => !option.inactive).map((option) => (
               <option key={option.id} value={option.id}>
                 {option.name}
               </option>

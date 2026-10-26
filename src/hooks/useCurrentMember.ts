@@ -19,12 +19,15 @@ function readSavedChoice(): string | null {
 /**
  * Integrante atual do Painel Pessoal: "eu" quando existe; senão, a escolha
  * salva neste aparelho. Nunca escolhe outra pessoa sozinho (devolve null).
+ * Participantes desativados não são aceitos como perfil.
  */
 export function useCurrentMember(members: Member[]) {
   const [savedChoice, setSavedChoice] = useState<string | null>(readSavedChoice)
 
   const findMember = (id: string | null) =>
-    id === null ? null : (members.find((member) => member.id === id) ?? null)
+    id === null
+      ? null
+      : (members.find((member) => member.id === id && !member.inactive) ?? null)
   const member = findMember(DEFAULT_CURRENT_MEMBER_ID) ?? findMember(savedChoice)
 
   function chooseMember(id: string) {

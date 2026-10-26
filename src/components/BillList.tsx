@@ -1,14 +1,19 @@
 import { useId, type ReactNode } from 'react'
-import type { Bill, Member, Today } from '../types'
+import type { Bill, BillSeries, Member, Today } from '../types'
 import { effectiveDueDay, getBillStatus } from '../utils/dates'
+import { isProjectedBill, seriesLabelFor } from '../utils/series'
 import { BillCard } from './BillCard'
 
 interface BillListProps {
+  /** Contas do mês: as gravadas e as previstas das séries. */
   bills: Bill[]
+  /** Séries da área, para os rótulos "Recorrente" e "Parcela 3/10". */
+  series?: BillSeries[]
   members: Member[]
   today: Today
   monthName: string
   previousMonthName: string
+  /** O mês anterior tem contas comuns para copiar. */
   canCopyPreviousMonth: boolean
   onAdd: () => void
   onCopyPreviousMonth: () => void
@@ -23,6 +28,7 @@ interface BillListProps {
 
 export function BillList({
   bills,
+  series = [],
   members,
   today,
   monthName,
@@ -46,6 +52,15 @@ export function BillList({
       ＋ Adicionar conta
     </button>
   )
+  // Copiar o mês anterior traz só contas comuns: o botão aparece quando o mês ainda não
+  // tem nenhuma, mesmo que já existam contas de séries (gravadas ou previstas).
+  const hasCommonBills = bills.some((bill) => bill.seriesId === undefined)
+  const copyButton = (
+    <button type="button" className="button button--ghost" onClick={onCopyPreviousMonth}>
+      Copiar contas de {previousMonthName}
+    </button>
+  )
+  const showCopyInHeader = canCopyPreviousMonth && !hasCommonBills && sortedBills.length > 0
 
   return (
     <section className="section" aria-labelledby={titleId}>
@@ -56,9 +71,10 @@ export function BillList({
           </h4>
           <p className="section__hint">Organizadas pela data de vencimento</p>
         </div>
-        {actions ? (
+        {actions || showCopyInHeader ? (
           <div className="section__actions">
             {actions}
+            {showCopyInHeader && copyButton}
             {addButton}
           </div>
         ) : (
@@ -82,15 +98,7 @@ export function BillList({
             <button type="button" className="button button--primary" onClick={onAdd}>
               ＋ Adicionar conta
             </button>
-            {canCopyPreviousMonth && (
-              <button
-                type="button"
-                className="button button--ghost"
-                onClick={onCopyPreviousMonth}
-              >
-                Copiar contas de {previousMonthName}
-              </button>
-            )}
+            {canCopyPreviousMonth && copyButton}
           </div>
         </div>
       ) : (
@@ -101,6 +109,8 @@ export function BillList({
                 bill={bill}
                 status={getBillStatus(bill, today)}
                 members={members}
+                projected={isProjectedBill(bill)}
+                seriesLabel={seriesLabelFor(bill, series)}
                 onTogglePaid={() => onTogglePaid(bill)}
                 onEdit={() => onEdit(bill)}
                 onDelete={() => onDelete(bill)}

@@ -1,6 +1,7 @@
 import { useId } from 'react'
 import type { Bill, Member } from '../types'
 import { formatBRL } from '../utils/money'
+import { feedbackClassName, type SaveFeedback } from '../utils/saveFeedback'
 import { Avatar } from './Avatar'
 
 interface FamilyMembersProps {
@@ -8,8 +9,11 @@ interface FamilyMembersProps {
   title?: string
   members: Member[]
   bills: Bill[]
-  /** Mensagem da última ação (adicionar, editar ou excluir). */
-  feedback: string | null
+  /**
+   * Mensagem da última ação (adicionar, editar, excluir ou desativar), com o tom que diz se
+   * a alteração já foi salva, está sendo salva ou ficou só nesta tela.
+   */
+  feedback: SaveFeedback | null
   canAdd: boolean
   onAdd: () => void
   onEdit: (member: Member) => void
@@ -46,6 +50,26 @@ export function FamilyMembers({
 }: FamilyMembersProps) {
   // Id único por instância: a seção aparece em mais de uma área.
   const titleId = useId()
+  // Desativados ficam num grupo recolhido, sem ações (não há reativação nem exclusão deles).
+  const activeMembers = members.filter((member) => !member.inactive)
+  const inactiveMembers = members.filter((member) => member.inactive)
+
+  /** Valores do mês do participante: total e quanto falta pagar. */
+  function renderTotals(member: Member) {
+    const { total, pending } = getMemberTotals(member.id, bills)
+    if (total === 0) return <span className="member-card__muted">Sem contas este mês</span>
+    return (
+      <>
+        <span className="member-card__total">{formatBRL(total)}</span>
+        {pending === 0 ? (
+          <span className="tag tag--paid">✓ Tudo pago</span>
+        ) : (
+          <span className="tag tag--pending">○ Falta {formatBRL(pending)}</span>
+        )}
+      </>
+    )
+  }
+
   return (
     <section className="section" aria-labelledby={titleId}>
       <div className="section__header section__header--with-action">
@@ -70,31 +94,17 @@ export function FamilyMembers({
       </div>
 
       <p className="members__feedback" role="status">
-        {feedback && <span className="backup-message backup-message--ok">{feedback}</span>}
+        {feedback && <span className={feedbackClassName(feedback.tone)}>{feedback.text}</span>}
       </p>
 
       <ul className="members">
-        {members.map((member) => {
-          const { total, pending } = getMemberTotals(member.id, bills)
+        {activeMembers.map((member) => {
           const isSelf = member.id === selfMemberId
           return (
             <li key={member.id} className={`member-card ${isSelf ? 'member-card--self' : ''}`}>
               <Avatar member={member} size="large" />
               <strong className="member-card__name">{member.name}</strong>
-              {total === 0 ? (
-                <span className="member-card__muted">Sem contas este mês</span>
-              ) : (
-                <>
-                  <span className="member-card__total">{formatBRL(total)}</span>
-                  {pending === 0 ? (
-                    <span className="tag tag--paid">✓ Tudo pago</span>
-                  ) : (
-                    <span className="tag tag--pending">
-                      ○ Falta {formatBRL(pending)}
-                    </span>
-                  )}
-                </>
-              )}
+              {renderTotals(member)}
               <div className="member-card__actions">
                 {onToggleSelf && (
                   <button
@@ -128,6 +138,23 @@ export function FamilyMembers({
           )
         })}
       </ul>
+
+      {inactiveMembers.length > 0 && (
+        <details className="members-inactive">
+          <summary className="members-inactive__summary">
+            Desativados ({inactiveMembers.length})
+          </summary>
+          <ul className="members">
+            {inactiveMembers.map((member) => (
+              <li key={member.id} className="member-card member-card--inactive">
+                <Avatar member={member} size="large" />
+                <strong className="member-card__name">{member.name}</strong>
+                {renderTotals(member)}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </section>
   )
 }

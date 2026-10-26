@@ -7,6 +7,8 @@ export interface Member {
   emoji: string
   /** Cor de fundo do avatar. */
   color: string
+  /** Desativado: não entra em contas novas, mas continua no histórico. */
+  inactive?: boolean
 }
 
 /** Quanto cada pessoa paga de uma conta, em centavos. */
@@ -27,6 +29,40 @@ export interface Bill {
   paid: boolean
   /** Contas criadas automaticamente para demonstração. */
   isExample?: boolean
+  /** Série (recorrente ou parcelada) da qual esta conta é a ocorrência do mês. */
+  seriesId?: string
+  /** Só em parceladas: número original da parcela (posição do mês na série). */
+  installmentNumber?: number
+  /** Ocorrência editada com "só esta ocorrência". */
+  overridden?: boolean
+}
+
+export type SeriesKind = 'recurring' | 'installment'
+
+/** Dados de cada ocorrência de uma série, válidos a partir de `fromMonth`. */
+export interface SeriesVersion {
+  fromMonth: MonthKey
+  name: string
+  /** Valor de cada ocorrência (numa parcelada, o valor de cada parcela). */
+  totalCents: number
+  dueDay: number
+  /** Divisão entre participantes; vazia em áreas individuais. */
+  shares: BillShare[]
+}
+
+/** Conta recorrente ou parcelada. As ocorrências gravadas são contas com `seriesId`. */
+export interface BillSeries {
+  id: string
+  kind: SeriesKind
+  startMonth: MonthKey
+  /** Só parcelada: quantidade de parcelas. */
+  installmentCount?: number
+  /** Só recorrente encerrada: último mês que gera conta. */
+  lastMonth?: MonthKey
+  /** Em ordem crescente de `fromMonth`; a primeira começa em `startMonth`. */
+  versions: SeriesVersion[]
+  /** Meses excluídos pela pessoa: nunca são recriados. */
+  skippedMonths: MonthKey[]
 }
 
 export type AreaType = 'individual' | 'shared'
@@ -41,10 +77,12 @@ export interface Area {
   /** Participantes da área. Áreas individuais não têm membros. */
   members: Member[]
   bills: Bill[]
+  /** Contas recorrentes e parceladas da área. */
+  series: BillSeries[]
 }
 
 export interface FinanceData {
-  version: 2
+  version: 3
   areas: Area[]
 }
 

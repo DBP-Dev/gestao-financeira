@@ -33,15 +33,16 @@ export function ensureMyAccountsArea(areas: Area[]): Area[] {
     type: 'individual',
     members: [],
     bills: [],
+    series: [],
   }
   const homeIndex = areas.findIndex((area) => area.id === HOME_AREA_ID)
   return [...areas.slice(0, homeIndex + 1), myAccounts, ...areas.slice(homeIndex + 1)]
 }
 
-/** Converte os dados da versão 1 sem alterar membros nem contas. */
-export function migrateV1ToV2(legacy: LegacyFinanceDataV1): FinanceData {
+/** Converte os dados da versão 1 para o formato atual sem alterar membros nem contas. */
+export function migrateV1ToV3(legacy: LegacyFinanceDataV1): FinanceData {
   return {
-    version: 2,
+    version: 3,
     areas: ensureMyAccountsArea([
       {
         id: HOME_AREA_ID,
@@ -49,6 +50,7 @@ export function migrateV1ToV2(legacy: LegacyFinanceDataV1): FinanceData {
         type: 'shared',
         members: legacy.members,
         bills: legacy.bills,
+        series: [],
       },
     ]),
   }
@@ -101,5 +103,5 @@ export function createArea(name: string, type: AreaType, areas: Area[]): Area {
   const usedIds = new Set(areas.map((area) => area.id))
   let id = createId()
   while (usedIds.has(id)) id = createId()
-  return { id, name: cleanAreaName(name), type, members: [], bills: [] }
+  return { id, name: cleanAreaName(name), type, members: [], bills: [], series: [] }
 }

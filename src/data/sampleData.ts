@@ -1,5 +1,5 @@
 import type { Bill, FinanceData, Member, MonthKey } from '../types'
-import { migrateV1ToV2 } from '../utils/areas'
+import { migrateV1ToV3 } from '../utils/areas'
 import { splitEvenly } from '../utils/money'
 
 export const MEMBER_IDS = {
@@ -86,7 +86,7 @@ export function createSampleBills(month: MonthKey): Bill[] {
 
 /** Primeiro uso: só a área "Gastos da casa", com os membros e as contas de exemplo. */
 export function createInitialData(month: MonthKey): FinanceData {
-  return migrateV1ToV2({
+  return migrateV1ToV3({
     version: 1,
     members: DEFAULT_MEMBERS,
     bills: createSampleBills(month),

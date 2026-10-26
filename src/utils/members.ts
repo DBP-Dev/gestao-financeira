@@ -1,4 +1,4 @@
-import type { Bill, Member } from '../types'
+import type { Bill, BillSeries, Member } from '../types'
 import { MAX_MEMBER_NAME_LENGTH, MAX_MEMBERS } from './backup'
 import { createId } from './ids'
 
@@ -87,27 +87,68 @@ export function countMemberBills(memberId: string, bills: Bill[]): number {
   return bills.filter((bill) => bill.shares.some((share) => share.memberId === memberId)).length
 }
 
-/** Motivos que impedem excluir um membro. Lista vazia = exclusão permitida. */
-export function getMemberDeletionBlockers(
+/**
+ * O membro aparece na divisão de alguma versão de uma conta recorrente ou parcelada.
+ * Excluí-lo deixaria a série apontando para alguém que não existe (dados inválidos).
+ */
+export function isMemberInSeries(memberId: string, series: BillSeries[]): boolean {
+  return series.some((item) =>
+    item.versions.some((version) =>
+      version.shares.some((share) => share.memberId === memberId),
+    ),
+  )
+}
+
+/** Participante ativo: aparece em contas novas, no perfil e em "Sou eu". */
+export function isActiveMember(member: Member): boolean {
+  return !member.inactive
+}
+
+/**
+ * O que acontece ao remover um participante:
+ * - 'delete': sem contas e sem séries, a exclusão é definitiva (como sempre foi);
+ * - 'deactivate': com histórico ou séries, ele é desativado e continua nas contas antigas;
+ * - 'blocked': nenhuma das duas é permitida, pelos motivos indicados.
+ */
+export type MemberRemoval =
+  | { mode: 'delete' }
+  | { mode: 'deactivate' }
+  | { mode: 'blocked'; reasons: string[] }
+
+/**
+ * Decide entre excluir, desativar ou bloquear. `protectedMemberId` é o perfil do painel
+ * pessoal (só em "Gastos da casa"), que não pode ser excluído nem desativado. Toda área
+ * precisa continuar com pelo menos um membro; `requireActive` ("Gastos da casa") exige
+ * também que reste um membro ativo. Nas outras áreas, séries que ficariam sem pagador
+ * ativo são conferidas na própria desativação.
+ */
+export function getMemberRemoval(
   member: Member,
   members: Member[],
   bills: Bill[],
-  currentMemberId: string | null,
-): string[] {
-  const blockers: string[] = []
-  const billCount = countMemberBills(member.id, bills)
-  if (billCount > 0) {
-    const billsLabel = billCount === 1 ? '1 conta' : `${billCount} contas`
-    blockers.push(
-      `Não é possível excluir este membro porque ele participa de ${billsLabel} ` +
-        '(contando todos os meses).',
+  series: BillSeries[],
+  protectedMemberId: string | null,
+  requireActive: boolean,
+): MemberRemoval {
+  if (!isActiveMember(member)) {
+    return { mode: 'blocked', reasons: ['Este participante já está desativado.'] }
+  }
+  const reasons: string[] = []
+  if (member.id === protectedMemberId) {
+    reasons.push(
+      'Não é possível excluir nem desativar o membro que está selecionado no painel pessoal.',
     )
   }
-  if (member.id === currentMemberId) {
-    blockers.push('Não é possível excluir o membro que está selecionado no painel pessoal.')
-  }
   if (members.length <= 1) {
-    blockers.push('É preciso ter pelo menos um membro.')
+    reasons.push('É preciso ter pelo menos um membro.')
+  } else if (
+    requireActive &&
+    !members.some((other) => other.id !== member.id && isActiveMember(other))
+  ) {
+    reasons.push('A área “Gastos da casa” precisa de pelo menos um membro ativo.')
   }
-  return blockers
+  if (reasons.length > 0) return { mode: 'blocked', reasons }
+  const hasHistory =
+    countMemberBills(member.id, bills) > 0 || isMemberInSeries(member.id, series)
+  return hasHistory ? { mode: 'deactivate' } : { mode: 'delete' }
 }

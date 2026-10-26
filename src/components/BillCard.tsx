@@ -7,6 +7,13 @@ interface BillCardProps {
   bill: Bill
   status: BillStatus
   members: Member[]
+  /**
+   * Conta prevista de uma série (ainda não gravada). Pagar ou editar grava a ocorrência
+   * do mês; excluir impede que ela seja criada.
+   */
+  projected?: boolean
+  /** Rótulo da série: "Recorrente" ou "Parcela 3/10". */
+  seriesLabel?: string | null
   onTogglePaid: () => void
   onEdit: () => void
   onDelete: () => void
@@ -22,6 +29,8 @@ export function BillCard({
   bill,
   status,
   members,
+  projected = false,
+  seriesLabel = null,
   onTogglePaid,
   onEdit,
   onDelete,
@@ -29,12 +38,14 @@ export function BillCard({
   const isSinglePerson = bill.shares.length === 1
 
   return (
-    <article className={`bill-card bill-card--${status}`}>
+    <article className={`bill-card bill-card--${status} ${projected ? 'bill-card--projected' : ''}`}>
       <div className="bill-card__top">
         <div>
           <h5 className="bill-card__name">
             {bill.name}
             {bill.isExample && <span className="tag tag--example">Exemplo</span>}
+            {projected && <span className="tag tag--projected">Prevista</span>}
+            {seriesLabel && <span className="tag tag--series">{seriesLabel}</span>}
           </h5>
           <p className="bill-card__due">Vence em {formatDueDate(bill)}</p>
         </div>
@@ -66,6 +77,11 @@ export function BillCard({
         </div>
       )}
 
+      {projected && (
+        <p className="bill-card__note">
+          Prevista: ela será criada automaticamente quando o mês chegar.
+        </p>
+      )}
       <div className="bill-card__actions">
         <button
           type="button"

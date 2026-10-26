@@ -36,14 +36,17 @@ function saveChoices(choices: AreaSelfChoices) {
   }
 }
 
-/** A escolha só vale para participante existente de área compartilhada criada (não "Gastos da casa"). */
+/**
+ * A escolha só vale para participante existente e ativo de área compartilhada criada (não
+ * "Gastos da casa"). Quando o participante é desativado, a escolha é limpa.
+ */
 function isValidChoice(areas: Area[], areaId: string, memberId: string): boolean {
   const area = areas.find((item) => item.id === areaId)
   return (
     area !== undefined &&
     area.type === 'shared' &&
     area.id !== HOME_AREA_ID &&
-    area.members.some((member) => member.id === memberId)
+    area.members.some((member) => member.id === memberId && !member.inactive)
   )
 }
 

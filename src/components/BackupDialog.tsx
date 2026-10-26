@@ -8,10 +8,16 @@ import {
   parseBackup,
   type BackupSummary,
 } from '../utils/backup'
+import { feedbackClassName, saveFeedback, type SaveState } from '../utils/saveFeedback'
 import { Modal } from './Modal'
 
 interface BackupDialogProps {
   data: FinanceData
+  /**
+   * Situação da gravação dos dados restaurados (null antes de restaurar). A restauração
+   * só é anunciada como salva depois que a gravação protegida confirmou.
+   */
+  restoreSaveState?: SaveState | null
   onRestore: (data: FinanceData) => void
   onClose: () => void
 }
@@ -31,7 +37,12 @@ function plural(count: number, singular: string, pluralForm: string) {
   return `${count} ${count === 1 ? singular : pluralForm}`
 }
 
-export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
+export function BackupDialog({
+  data,
+  restoreSaveState = null,
+  onRestore,
+  onClose,
+}: BackupDialogProps) {
   const [exportedFileName, setExportedFileName] = useState<string | null>(null)
   const [restore, setRestore] = useState<RestoreState>({ status: 'idle' })
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -95,6 +106,8 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
     }
     resetFileInput()
   }
+
+  const restoreFeedback = saveFeedback('Dados restaurados', restoreSaveState ?? 'saving')
 
   function handleConfirmRestore() {
     if (restore.status !== 'ready') return
@@ -206,8 +219,11 @@ export function BackupDialog({ data, onRestore, onClose }: BackupDialogProps) {
           )}
 
           {restore.status === 'done' && (
-            <p className="backup-message backup-message--ok" role="status">
-              ✓ Dados restaurados com sucesso.
+            <p
+              className={feedbackClassName(restoreFeedback.tone)}
+              role={restoreFeedback.tone === 'error' ? 'alert' : 'status'}
+            >
+              {restoreFeedback.text}
             </p>
           )}
         </section>

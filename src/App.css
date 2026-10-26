@@ -244,6 +244,18 @@
   vertical-align: middle;
 }
 
+/* Contas recorrentes e parceladas: rótulo da série e da conta prevista (ainda não gravada). */
+.tag--series,
+.tag--projected {
+  margin-left: 8px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.tag--projected {
+  border-style: dashed;
+}
+
 /* ---------- Painel Pessoal ---------- */
 
 .personal-panel {
@@ -943,6 +955,43 @@
   color: var(--text);
 }
 
+/* Resumo de "esta e as seguintes" antes de confirmar. */
+.series-edit-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding-left: 20px;
+  color: var(--text);
+}
+
+.series-edit-summary__warning {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* Participantes desativados: grupo recolhido, sem ações. */
+.members-inactive {
+  margin-top: 16px;
+}
+
+.members-inactive__summary {
+  cursor: pointer;
+  color: var(--text-soft);
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+.members-inactive .members {
+  margin-top: 8px;
+}
+
+/* "Encerrar recorrência…" no formulário de edição. */
+.bill-form__end {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
 .member-card__muted {
   color: var(--text-soft);
   font-size: 0.85rem;
@@ -1101,6 +1150,23 @@
 .bill-card__secondary-actions {
   display: flex;
   gap: 8px;
+}
+
+/* Prevista: contorno tracejado, para não ser confundida com uma conta já gravada. */
+.bill-card--projected {
+  border-style: dashed;
+  background: transparent;
+}
+
+.bill-card__note {
+  margin-top: auto;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+}
+
+.bill-card__actions .bill-card__note {
+  margin-top: 0;
+  align-self: center;
 }
 
 /* ---------- Estado vazio ---------- */
@@ -1457,6 +1523,20 @@ select.input option {
   box-shadow: var(--shadow);
 }
 
+/* Tipo da conta: três opções (Normal, Recorrente, Parcelada). */
+.segmented--three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.segmented__option:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.input--short {
+  max-width: 10rem;
+}
+
 .split-list {
   display: flex;
   flex-direction: column;
@@ -1597,6 +1677,13 @@ select.input option {
   background: var(--danger-soft);
   border-color: var(--danger-border);
   color: var(--danger);
+}
+
+/* Ação feita e ainda não confirmada no armazenamento. */
+.backup-message--pending {
+  display: block;
+  border-color: var(--border);
+  color: var(--text-soft);
 }
 
 .backup-confirm {
