@@ -8,15 +8,23 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores(['dist']),
   {
+    // Regras comuns de JavaScript e TypeScript, sem variáveis globais de nenhum ambiente.
     files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs.flat.recommended,
-      reactRefresh.configs.vite,
-    ],
+    extends: [js.configs.recommended, tseslint.configs.recommended],
+  },
+  {
+    // Interface (navegador e React).
+    files: ['src/**/*.{ts,tsx}'],
+    extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
     languageOptions: {
       globals: globals.browser,
+    },
+  },
+  {
+    // Servidor e arquivos de configuração da raiz (Node): só as variáveis globais do Node.
+    files: ['server/**/*.ts', '*.ts'],
+    languageOptions: {
+      globals: globals.node,
     },
   },
 ])
