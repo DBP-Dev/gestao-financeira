@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { Member } from '../types'
-import { DEFAULT_CURRENT_MEMBER_ID } from '../utils/personal'
+import type { Member } from '../domain/types'
+import { DEFAULT_CURRENT_MEMBER_ID } from '../data/sampleData'
 
 /**
  * Preferência local deste aparelho. Fica fora dos dados financeiros

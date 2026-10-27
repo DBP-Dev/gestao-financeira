@@ -1,6 +1,6 @@
-import type { Bill, BillStatus, Member } from '../types'
-import { formatDueDate } from '../utils/dates'
-import { formatBRL } from '../utils/money'
+import type { Bill, BillStatus, Member } from '../domain/types'
+import { formatDueDate } from '../domain/dates'
+import { formatBRL } from '../domain/money'
 import { Avatar } from './Avatar'
 
 interface BillCardProps {

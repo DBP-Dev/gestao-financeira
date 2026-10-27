@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { Member } from '../types'
+import type { Member } from '../domain/types'
 
 interface AvatarProps {
   member: Member

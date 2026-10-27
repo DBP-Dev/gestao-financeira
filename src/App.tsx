@@ -26,17 +26,17 @@ import { useAreaSelf } from './hooks/useAreaSelf'
 import { useCurrentMember } from './hooks/useCurrentMember'
 import { useFinanceStore, type BillInput } from './hooks/useFinanceStore'
 import { useToday } from './hooks/useToday'
-import type { Area, Bill, FinanceData, Member } from './types'
+import type { Area, Bill, FinanceData, Member } from './domain/types'
 import {
   HOME_AREA_ID,
   MAX_AREAS,
   MY_ACCOUNTS_AREA_ID,
   canDeleteArea,
   getHomeArea,
-} from './utils/areas'
-import { getBillsTotals } from './utils/billTotals'
-import { getDueAlerts } from './utils/dueAlerts'
-import { getMemberShareTotals, getPersonalMonthSummary } from './utils/personal'
+} from './domain/areas'
+import { getBillsTotals } from './domain/billTotals'
+import { getDueAlerts } from './domain/dueAlerts'
+import { getMemberShareTotals, getPersonalMonthSummary } from './domain/personal'
 import {
   PAID_OCCURRENCE_DELETE_MESSAGE,
   billsForMonth,
@@ -49,8 +49,8 @@ import {
   seriesLabelFor,
   type SeriesEditInput,
   type SeriesEditPlan,
-} from './utils/series'
-import { confirmationFor, type CopyBillsPlan } from './utils/commonBills'
+} from './domain/series'
+import { confirmationFor, type CopyBillsPlan } from './domain/commonBills'
 import type { BillData, SeriesEditBase } from './utils/billForm'
 import {
   feedbackClassName,
@@ -65,8 +65,8 @@ import {
   formatMonthName,
   getBillStatus,
   isDueSoon,
-} from './utils/dates'
-import { MAX_MEMBERS, createMember, getMemberRemoval } from './utils/members'
+} from './domain/dates'
+import { MAX_MEMBERS, createMember, getMemberRemoval } from './domain/members'
 
 function plural(count: number, singular: string, pluralForm: string) {
   return `${count} ${count === 1 ? singular : pluralForm}`

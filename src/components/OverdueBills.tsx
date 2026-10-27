@@ -1,7 +1,7 @@
 import { useId } from 'react'
-import type { Bill } from '../types'
-import { formatDueDate, formatMonthLabel } from '../utils/dates'
-import { formatBRL } from '../utils/money'
+import type { Bill } from '../domain/types'
+import { formatDueDate, formatMonthLabel } from '../domain/dates'
+import { formatBRL } from '../domain/money'
 
 interface OverdueBillsProps {
   /** Contas de meses anteriores, não pagas e já vencidas. */

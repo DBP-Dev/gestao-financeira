@@ -1,5 +1,5 @@
-import type { MonthKey } from '../types'
-import { addMonths, formatMonthLabel } from '../utils/dates'
+import type { MonthKey } from '../domain/types'
+import { addMonths, formatMonthLabel } from '../domain/dates'
 
 interface AppHeaderProps {
   month: MonthKey

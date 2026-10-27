@@ -1,4 +1,4 @@
-import type { Bill, BillStatus, MonthKey, Today } from '../types'
+import type { Bill, BillStatus, MonthKey, Today } from './types'
 
 function parseMonthKey(key: MonthKey): { year: number; month: number } {
   const [year, month] = key.split('-').map(Number)

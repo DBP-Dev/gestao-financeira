@@ -1,8 +1,8 @@
 import { useId, useState } from 'react'
-import type { MonthKey } from '../types'
-import { formatMonthLabel } from '../utils/dates'
-import { formatBRL } from '../utils/money'
-import type { EndSeriesPlan, PendingAfterEndChoice } from '../utils/series'
+import type { MonthKey } from '../domain/types'
+import { formatMonthLabel } from '../domain/dates'
+import { formatBRL } from '../domain/money'
+import type { EndSeriesPlan, PendingAfterEndChoice } from '../domain/series'
 import { Modal } from './Modal'
 
 interface EndSeriesDialogProps {

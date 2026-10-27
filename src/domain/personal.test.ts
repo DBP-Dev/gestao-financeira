@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Area, Bill, BillSeries } from '../types'
+import type { Area, Bill, BillSeries } from './types'
 import { HOME_AREA_ID, MY_ACCOUNTS_AREA_ID } from './areas'
 import { getMemberShareTotals, getPersonalMonthSummary, type PersonalMonthSummary } from './personal'
 import { billsForMonth } from './series'

@@ -3,9 +3,9 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { CopyBillsDialog } from './components/CopyBillsDialog'
-import type { Bill, FinanceData } from './types'
-import { createBackup } from './utils/backup'
-import { COPY_SHARES_CHANGED_MESSAGE, type CopyBillsPlan } from './utils/commonBills'
+import type { Bill, FinanceData } from './domain/types'
+import { createBackup } from './domain/backup'
+import { COPY_SHARES_CHANGED_MESSAGE, type CopyBillsPlan } from './domain/commonBills'
 import type { LockManagerLike } from './utils/storageSync'
 
 /**

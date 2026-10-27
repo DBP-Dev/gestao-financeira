@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_MEMBERS, createInitialData } from '../data/sampleData'
-import type { Area, Bill, FinanceData, Member, MonthKey, Today } from '../types'
+import type { Area, Bill, FinanceData, Member, MonthKey, Today } from '../domain/types'
 import {
   HOME_AREA_ID,
   createArea,
   getHomeArea,
   migrateV1ToV3,
   removeArea,
-} from '../utils/areas'
-import { MAX_BILLS, MAX_MEMBERS, parseStoredData } from '../utils/backup'
+} from '../domain/areas'
+import { MAX_BILLS, MAX_MEMBERS, parseStoredData } from '../domain/backup'
 import {
   addCommonBill,
   copyCommonBills,
   planCopyBills,
   type CopyConfirmation,
-} from '../utils/commonBills'
-import { isMemberInSeries } from '../utils/members'
+} from '../domain/commonBills'
+import { isMemberInSeries } from '../domain/members'
 import type { SaveState } from '../utils/saveFeedback'
 import {
   createGuardedWriter,
@@ -49,7 +49,7 @@ import {
   type OccurrenceInput,
   type PendingOccurrence,
   type SeriesChangeResult,
-} from '../utils/series'
+} from '../domain/series'
 
 /**
  * Chave mantida desde a primeira versão para não mover dados existentes.

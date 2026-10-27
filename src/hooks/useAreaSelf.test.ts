@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { Area, Member } from '../types'
-import { HOME_AREA_ID } from '../utils/areas'
+import type { Area, Member } from '../domain/types'
+import { HOME_AREA_ID } from '../domain/areas'
 import { useAreaSelf } from './useAreaSelf'
 
 const AREA_SELF_KEY = 'gestao-financeira:perfil-areas:v1'

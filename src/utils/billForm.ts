@@ -1,6 +1,6 @@
-import type { Bill, BillShare, Member } from '../types'
-import { centsToInput, formatBRL, parseMoneyInput, splitEvenly } from './money'
-import { validateInstallmentCount } from './series'
+import type { Bill, BillShare, Member } from '../domain/types'
+import { centsToInput, formatBRL, parseMoneyInput, splitEvenly } from '../domain/money'
+import { validateInstallmentCount } from '../domain/series'
 
 export type SplitMode = 'equal' | 'custom'
 

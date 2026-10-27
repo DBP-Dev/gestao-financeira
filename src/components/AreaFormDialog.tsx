@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
-import type { Area } from '../types'
-import { MAX_AREA_NAME_LENGTH, cleanAreaName, validateAreaName } from '../utils/areas'
+import type { Area } from '../domain/types'
+import { MAX_AREA_NAME_LENGTH, cleanAreaName, validateAreaName } from '../domain/areas'
 import { Modal } from './Modal'
 
 export interface AreaFormValues {

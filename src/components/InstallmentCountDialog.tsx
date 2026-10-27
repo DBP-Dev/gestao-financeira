@@ -1,8 +1,8 @@
 import { useId, useState } from 'react'
-import type { Member } from '../types'
-import { formatMonthLabel } from '../utils/dates'
-import { formatBRL } from '../utils/money'
-import type { InstallmentCountPlan } from '../utils/series'
+import type { Member } from '../domain/types'
+import { formatMonthLabel } from '../domain/dates'
+import { formatBRL } from '../domain/money'
+import type { InstallmentCountPlan } from '../domain/series'
 import { Modal } from './Modal'
 
 interface InstallmentCountDialogProps {

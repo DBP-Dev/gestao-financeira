@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Area, FinanceData } from '../types'
+import type { Area, FinanceData } from './types'
 import { HOME_AREA_ID, MY_ACCOUNTS_AREA_ID } from './areas'
 import {
   BACKUP_FORMAT,

@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import type { BillInput } from '../hooks/useFinanceStore'
-import type { Bill, Member, MonthKey, SeriesKind } from '../types'
+import type { Bill, Member, MonthKey, SeriesKind } from '../domain/types'
 import {
   analyzeDraft,
   createDraft,
@@ -13,8 +13,8 @@ import {
   type SeriesEditBase,
   type SplitMode,
 } from '../utils/billForm'
-import { formatMonthName } from '../utils/dates'
-import { centsToInput, formatBRL, parseMoneyInput, splitEvenly } from '../utils/money'
+import { formatMonthName } from '../domain/dates'
+import { centsToInput, formatBRL, parseMoneyInput, splitEvenly } from '../domain/money'
 import { Avatar } from './Avatar'
 import { Modal } from './Modal'
 

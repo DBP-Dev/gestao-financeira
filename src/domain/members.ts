@@ -1,4 +1,4 @@
-import type { Bill, BillSeries, Member } from '../types'
+import type { Bill, BillSeries, Member } from './types'
 import { MAX_MEMBER_NAME_LENGTH, MAX_MEMBERS } from './backup'
 import { createId } from './ids'
 

@@ -1,7 +1,7 @@
 import { useId, useState, type ReactNode } from 'react'
-import type { Bill } from '../types'
-import { getBillsTotals } from '../utils/billTotals'
-import { formatBRL } from '../utils/money'
+import type { Bill } from '../domain/types'
+import { getBillsTotals } from '../domain/billTotals'
+import { formatBRL } from '../domain/money'
 
 interface FamilyAreaProps {
   /** Nome exibido no cabeçalho. Padrão: a área fixa "Gastos da casa". */

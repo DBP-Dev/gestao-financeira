@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
-import type { Member } from '../types'
-import type { CopyBillsPlan } from '../utils/commonBills'
-import { formatBRL } from '../utils/money'
+import type { Member } from '../domain/types'
+import type { CopyBillsPlan } from '../domain/commonBills'
+import { formatBRL } from '../domain/money'
 import { Modal } from './Modal'
 
 interface CopyBillsDialogProps {

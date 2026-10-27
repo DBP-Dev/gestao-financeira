@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Bill, FinanceData, Today } from '../types'
+import type { Bill, FinanceData, Today } from '../domain/types'
 import {
   COPY_PAYER_MISSING_MESSAGE,
   COPY_SHARES_CHANGED_MESSAGE,
   confirmationFor,
-} from '../utils/commonBills'
+} from '../domain/commonBills'
 import { STORAGE_LOCK_NAME, type LockManagerLike } from '../utils/storageSync'
 import { useFinanceStore, type BillInput } from './useFinanceStore'
 

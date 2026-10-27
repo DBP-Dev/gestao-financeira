@@ -1,8 +1,8 @@
 import { useId } from 'react'
-import type { Member, Today } from '../types'
-import { formatAlertDate, visibleAlerts, type DueAlert, type DueAlerts } from '../utils/dueAlerts'
-import { formatBRL } from '../utils/money'
-import type { PersonalMonthSummary } from '../utils/personal'
+import type { Member, Today } from '../domain/types'
+import { formatAlertDate, visibleAlerts, type DueAlert, type DueAlerts } from '../domain/dueAlerts'
+import { formatBRL } from '../domain/money'
+import type { PersonalMonthSummary } from '../domain/personal'
 import { Avatar } from './Avatar'
 
 interface PersonalPanelProps {

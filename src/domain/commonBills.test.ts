@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Bill, BillSeries, FinanceData } from '../types'
+import type { Bill, BillSeries, FinanceData } from './types'
 import { HOME_AREA_ID, MY_ACCOUNTS_AREA_ID } from './areas'
 import { MAX_BILLS, parseStoredData } from './backup'
 import {

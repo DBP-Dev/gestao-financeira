@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Member, Today } from '../types'
-import type { DueAlert, DueAlerts } from '../utils/dueAlerts'
-import type { PersonalMonthSummary } from '../utils/personal'
+import type { Member, Today } from '../domain/types'
+import type { DueAlert, DueAlerts } from '../domain/dueAlerts'
+import type { PersonalMonthSummary } from '../domain/personal'
 import { PersonalPanel } from './PersonalPanel'
 
 const member = (id: string, name: string, inactive = false): Member => ({

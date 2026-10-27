@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import type { Member } from '../types'
+import type { Member } from '../domain/types'
 import {
   describeSeriesEditOrigin,
   diffBillData,
@@ -8,9 +8,9 @@ import {
   type BillDataDiff,
   type SeriesEditBase,
 } from '../utils/billForm'
-import { formatMonthLabel, formatMonthList, formatMonthName } from '../utils/dates'
-import { formatBRL } from '../utils/money'
-import type { OverriddenChoice, SeriesEditInput, SeriesEditPlan } from '../utils/series'
+import { formatMonthLabel, formatMonthList, formatMonthName } from '../domain/dates'
+import { formatBRL } from '../domain/money'
+import type { OverriddenChoice, SeriesEditInput, SeriesEditPlan } from '../domain/series'
 import { Modal } from './Modal'
 
 interface SeriesEditConfirmDialogProps {

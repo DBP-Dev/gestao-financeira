@@ -1,4 +1,4 @@
-import type { Area, AreaType, FinanceData, LegacyFinanceDataV1 } from '../types'
+import type { Area, AreaType, FinanceData, LegacyFinanceDataV1 } from './types'
 import { createId } from './ids'
 
 /**

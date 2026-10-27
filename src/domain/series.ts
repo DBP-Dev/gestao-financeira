@@ -8,7 +8,7 @@ import type {
   SeriesKind,
   SeriesVersion,
   Today,
-} from '../types'
+} from './types'
 import { HOME_AREA_ID } from './areas'
 import { MAX_BILL_NAME_LENGTH, MAX_BILLS, MAX_INSTALLMENTS } from './backup'
 import { formatMonthLabel } from './dates'

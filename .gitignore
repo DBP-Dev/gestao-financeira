@@ -22,3 +22,42 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Dados reais e segredos: nunca no repositório (ver plano E0–E8)
+# Bancos SQLite e arquivos auxiliares (WAL/SHM/journal)
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+
+# Pastas de dados, backups, exportações, certificados e configuração local (na raiz)
+/data/
+/backups/
+/exports/
+/certs/
+/config/*
+!/config/*.example.*
+
+# Backups e exportações reais do aplicativo
+gestao-de-gastos-backup-*.json
+gestao-de-gastos-*.txt
+*.backup.json
+
+# Variáveis de ambiente e configurações locais (exemplos continuam versionáveis)
+.env
+.env.*
+!.env.example
+*.local.json
+
+# Certificados e chaves privadas
+*.pem
+*.key
+*.crt
+*.cer
+*.pfx
+*.p12

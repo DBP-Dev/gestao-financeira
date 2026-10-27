@@ -1,6 +1,6 @@
 import { useId } from 'react'
-import type { Bill, Member } from '../types'
-import { formatBRL } from '../utils/money'
+import type { Bill, Member } from '../domain/types'
+import { formatBRL } from '../domain/money'
 import { feedbackClassName, type SaveFeedback } from '../utils/saveFeedback'
 import { Avatar } from './Avatar'
 

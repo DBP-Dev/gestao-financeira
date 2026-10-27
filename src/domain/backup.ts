@@ -7,7 +7,7 @@ import type {
   LegacyFinanceDataV1,
   Member,
   SeriesVersion,
-} from '../types'
+} from './types'
 import {
   HOME_AREA_ID,
   MAX_AREA_NAME_LENGTH,
@@ -90,24 +90,6 @@ export function createBackupFileName(
   const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
   const time = `${pad(now.getHours())}${pad(now.getMinutes())}`
   return `${prefix}-${date}-${time}.${extension}`
-}
-
-/** Faz o navegador baixar o backup como arquivo .json. */
-export function downloadBackup(backup: BackupFile, fileName: string) {
-  downloadTextFile(JSON.stringify(backup, null, 2), fileName, 'application/json')
-}
-
-/** Faz o navegador baixar um texto qualquer como arquivo, sem alterá-lo. */
-export function downloadTextFile(text: string, fileName: string, type = 'text/plain') {
-  const blob = new Blob([text], { type })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = fileName
-  document.body.append(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
 }
 
 /* ---------- Validação ---------- */
@@ -642,7 +624,12 @@ function validateLegacyContent(members: unknown, bills: unknown): LegacyFinanceD
   return { version: 1, members: cleanMembers, bills: cleanBills }
 }
 
-function validateArea(
+/**
+ * Valida uma área e devolve a versão limpa. Exportada para o futuro servidor, que guarda
+ * cada área separadamente. Em dados inválidos, lança um erro com a mensagem do problema;
+ * os conjuntos acumulam os ids já vistos, para detectar repetições entre áreas.
+ */
+export function validateArea(
   value: unknown,
   position: number,
   areaIds: Set<string>,

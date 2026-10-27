@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from 'react'
-import type { Bill, BillSeries, Member, Today } from '../types'
-import { effectiveDueDay, getBillStatus } from '../utils/dates'
-import { isProjectedBill, seriesLabelFor } from '../utils/series'
+import type { Bill, BillSeries, Member, Today } from '../domain/types'
+import { effectiveDueDay, getBillStatus } from '../domain/dates'
+import { isProjectedBill, seriesLabelFor } from '../domain/series'
 import { BillCard } from './BillCard'
 
 interface BillListProps {

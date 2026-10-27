@@ -1,9 +1,5 @@
-import { MEMBER_IDS } from '../data/sampleData'
-import type { Area, Bill } from '../types'
+import type { Area, Bill } from './types'
 import { getBillsTotals } from './billTotals'
-
-/** Integrante usado como "eu" no Painel Pessoal quando existe nos dados. */
-export const DEFAULT_CURRENT_MEMBER_ID: string = MEMBER_IDS.me
 
 export interface ShareTotals {
   /** Soma das parcelas da pessoa, pagas ou pendentes (centavos). */

@@ -1,4 +1,4 @@
-import { formatBRL } from '../utils/money'
+import { formatBRL } from '../domain/money'
 
 interface IndividualSummaryProps {
   /** Mês selecionado, por extenso (ex.: "outubro de 2026"). */

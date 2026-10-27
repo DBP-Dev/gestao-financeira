@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { Area } from '../types'
-import { HOME_AREA_ID } from '../utils/areas'
+import type { Area } from '../domain/types'
+import { HOME_AREA_ID } from '../domain/areas'
 
 /**
  * Quem é "eu" em cada área compartilhada criada: { id da área: id do participante }.

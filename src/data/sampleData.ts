@@ -1,6 +1,6 @@
-import type { Bill, FinanceData, Member, MonthKey } from '../types'
-import { migrateV1ToV3 } from '../utils/areas'
-import { splitEvenly } from '../utils/money'
+import type { Bill, FinanceData, Member, MonthKey } from '../domain/types'
+import { migrateV1ToV3 } from '../domain/areas'
+import { splitEvenly } from '../domain/money'
 
 export const MEMBER_IDS = {
   me: 'eu',
@@ -9,6 +9,9 @@ export const MEMBER_IDS = {
   brother: 'irmao',
   grandma: 'vo',
 } as const
+
+/** Integrante usado como "eu" no Painel Pessoal quando existe nos dados. */
+export const DEFAULT_CURRENT_MEMBER_ID: string = MEMBER_IDS.me
 
 export const DEFAULT_MEMBERS: Member[] = [
   { id: MEMBER_IDS.me, name: 'Eu', emoji: '🙂', color: '#d8ecff' },

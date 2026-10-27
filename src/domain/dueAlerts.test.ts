@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Area, Bill, BillSeries, Today } from '../types'
+import type { Area, Bill, BillSeries, Today } from './types'
 import { HOME_AREA_ID, MY_ACCOUNTS_AREA_ID } from './areas'
 import { formatAlertDate, getDueAlerts, visibleAlerts, type DueAlert } from './dueAlerts'
 import { projectedBillId } from './series'

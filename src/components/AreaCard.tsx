@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import type { Area, Bill } from '../types'
-import { AREA_TYPE_LABEL } from '../utils/areas'
+import type { Area, Bill } from '../domain/types'
+import { AREA_TYPE_LABEL } from '../domain/areas'
 import { FamilyArea } from './FamilyArea'
 
 interface AreaCardProps {

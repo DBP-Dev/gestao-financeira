@@ -1,4 +1,4 @@
-import type { Area, Bill, FinanceData, MonthKey } from '../types'
+import type { Area, Bill, FinanceData, MonthKey } from './types'
 import { MAX_BILLS } from './backup'
 import { createId } from './ids'
 import {

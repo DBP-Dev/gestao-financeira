@@ -1,12 +1,12 @@
 import { useId, useState, type FormEvent } from 'react'
-import type { Member } from '../types'
+import type { Member } from '../domain/types'
 import {
   MAX_MEMBER_NAME_LENGTH,
   MEMBER_COLOR_OPTIONS,
   pickMemberColor,
   validateMemberName,
   type MemberColorOption,
-} from '../utils/members'
+} from '../domain/members'
 import { Avatar } from './Avatar'
 import { Modal } from './Modal'
 

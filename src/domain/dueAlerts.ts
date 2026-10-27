@@ -1,4 +1,4 @@
-import type { Area, Bill, MonthKey, Today } from '../types'
+import type { Area, Bill, MonthKey, Today } from './types'
 import { effectiveDueDay, formatMonthName, getBillStatus, nextBusinessDay } from './dates'
 import { billsForMonth } from './series'
 

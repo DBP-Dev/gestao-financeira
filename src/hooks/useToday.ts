@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { Today } from '../types'
-import { getToday } from '../utils/dates'
+import type { Today } from '../domain/types'
+import { getToday } from '../domain/dates'
 
 /** Milissegundos até a próxima meia-noite local (com 1 segundo de folga). */
 function msUntilNextMidnight(): number {

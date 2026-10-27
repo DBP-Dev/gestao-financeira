@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { Member } from '../types'
-import { DEFAULT_CURRENT_MEMBER_ID } from '../utils/personal'
+import type { Member } from '../domain/types'
+import { DEFAULT_CURRENT_MEMBER_ID } from '../data/sampleData'
 import { useCurrentMember } from './useCurrentMember'
 
 const PROFILE_KEY = 'gestao-financeira:perfil:v1'

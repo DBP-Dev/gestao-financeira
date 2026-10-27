@@ -1,4 +1,4 @@
-import type { Bill } from '../types'
+import type { Bill } from './types'
 
 export interface BillsTotals {
   /** Soma dos valores integrais das contas (centavos). */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Bill } from '../types'
+import type { Bill } from './types'
 import { effectiveDueDay, formatMonthList, nextBusinessDay } from './dates'
 
 describe('lista curta de meses (formatMonthList)', () => {

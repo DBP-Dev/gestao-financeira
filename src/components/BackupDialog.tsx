@@ -1,13 +1,13 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react'
-import type { FinanceData } from '../types'
+import type { FinanceData } from '../domain/types'
 import {
   MAX_BACKUP_FILE_BYTES,
   createBackup,
   createBackupFileName,
-  downloadBackup,
   parseBackup,
   type BackupSummary,
-} from '../utils/backup'
+} from '../domain/backup'
+import { downloadBackup } from '../utils/download'
 import { feedbackClassName, saveFeedback, type SaveState } from '../utils/saveFeedback'
 import { Modal } from './Modal'
 

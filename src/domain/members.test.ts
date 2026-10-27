@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Bill, BillSeries, Member } from '../types'
+import type { Bill, BillSeries, Member } from './types'
 import { getMemberRemoval, isActiveMember, isMemberInSeries } from './members'
 
 const member = (id: string, name: string, inactive = false): Member => ({

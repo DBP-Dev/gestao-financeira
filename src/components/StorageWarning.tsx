@@ -1,5 +1,6 @@
 import type { StorageIssue } from '../hooks/useFinanceStore'
-import { createBackupFileName, downloadTextFile } from '../utils/backup'
+import { createBackupFileName } from '../domain/backup'
+import { downloadTextFile } from '../utils/download'
 
 interface StorageWarningProps {
   issue: StorageIssue
